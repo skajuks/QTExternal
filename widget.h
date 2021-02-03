@@ -48,6 +48,19 @@ private slots:
 
     void on_Flashvalue_valueChanged(double arg1);
 
+    void on_chams_bright_slider_valueChanged(int value);
+
+    void on_team_chams_stateChanged(int arg1);
+
+    void on_fov_slider_valueChanged(int value);
+
+    void on_nightmode_slider_valueChanged(int value);
+
+
+    void on_enemy_chams_stateChanged(int arg1);
+
+    void on_fakelag_slider_valueChanged(int value);
+
 private:
 
 };

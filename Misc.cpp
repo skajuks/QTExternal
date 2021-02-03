@@ -1,4 +1,4 @@
-#include "bhop.h"
+#include "Misc.h"
 #include "Functions.h"
 #include "offsets.hpp"
 #include "widget.h"
@@ -23,6 +23,11 @@ bool _Bhop::bhopEnabled(){
 
 void _Bhop::setBhopEnabled(bool state){
     bhop_enabled = state;
+}
+
+void Misc::changeFov(int fov){
+    uintptr_t localPlayer = Functions::getLocalPlayer();
+    Memory.writeMem<int>(localPlayer + m_iDefaultFOV, fov);
 }
 
 

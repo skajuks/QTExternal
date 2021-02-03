@@ -335,7 +335,6 @@ VECTOR2 getClosestEnemyByAngle(){               //redo this function, doesnt nee
             }
         }
         if(target != NULL){
-            std::cout << angleTo.x << angleTo.y << angleTo.z << std::endl;
             AimAngle = CalcAngle(pPos, targetBones);
             AimAngle = Smooth(smooth, pAngle, AimAngle - recoil);
             normalizeAngles(&AimAngle.x , &AimAngle.y);

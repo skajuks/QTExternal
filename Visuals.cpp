@@ -1,4 +1,4 @@
-#include "glow.h"
+#include "Visuals.h"
 #include "Functions.h"
 #include "offsets.hpp"
 #include "Signatures.hpp"
@@ -11,26 +11,47 @@ Chams clr_team;
 Chams clr_enemy;
 uintptr_t glowObject;
 
-bool glow_enabled = 0;
-bool enableHealthGlow = 0;
+bool glow_enabled = false;
+bool enableHealthGlow = false;
+bool call_brightness_on_loop = false;
+float alpha = 1.f;
 
-bool alpha = 1.f;
+float brightness = 100.f;
+
 // team glows
-int TeamR = 0;
-int TeamG = 0;
-int TeamB = 255;
+BYTE TeamR = 0;
+BYTE TeamG = 0;
+BYTE TeamB = 255;
 
 //enemy glows
-int ETeamR = 0;
-int ETeamG = 0;
-int ETeamB = 255;
-
+BYTE ETeamR = 0;
+BYTE ETeamG = 0;
+BYTE ETeamB = 255;
 
 bool Glow::glowEnabled(){
-    if (glow_enabled)
+    if(glow_enabled)
         return true;
     else
         return false;
+}
+
+
+void Glow::teamChamsStateChanged(int tChams[3]){
+    clr_team.red = (BYTE)tChams[0];
+    clr_team.green = (BYTE)tChams[1];
+    clr_team.blue = (BYTE)tChams[2];
+}
+
+
+void Glow::enemyChamsStateChanged(int eChams[3]){
+    clr_enemy.red = (BYTE)eChams[0];
+    clr_enemy.green = (BYTE)eChams[1];
+    clr_enemy.blue = (BYTE)eChams[2];
+}
+
+void Glow::brightnessStateChanged(bool state, float bright){
+    brightness = bright;
+    call_brightness_on_loop = state;
 }
 
 void Glow::setGlowEnabled(bool state){
@@ -44,16 +65,15 @@ void Glow::setGlowAlpha(float value){
     alpha = value;
 }
 
-
 void Glow::setGlowTeamColor(int r, int g, int b, bool lPlayerTeam){
     if(lPlayerTeam){
-        TeamR = r;
-        TeamG = g;
-        TeamB = b;
+        TeamR = (BYTE)r;
+        TeamG = (BYTE)g;
+        TeamB = (BYTE)b;
     }else{
-        ETeamR = r;
-        ETeamG = g;
-        ETeamB = b;
+        ETeamR = (BYTE)r;
+        ETeamG = (BYTE)g;
+        ETeamB = (BYTE)b;
     }
 }
 
@@ -101,14 +121,15 @@ static void setTeamGlow(uintptr_t entity, int glowIndex) {
 
 static void setChams() {
     clr_enemy.blue = 255;
-    clr_enemy.green = 225;
+    clr_enemy.green = 255;
     clr_enemy.red = 0;
 
-    clr_team.red = 225;
-    clr_team.green = 225;
+    clr_team.red = 255;
+    clr_team.green = 255;
     clr_team.blue = 0;
+}
 
-    float brightness = 100.0f;
+static void setBrightness() {
     int ptr = Memory.readMem<int>(engineModule + model_ambient_min);
     int xorptr = *(int*)&brightness ^ ptr;
     Memory.writeMem<int>(engineModule + model_ambient_min, xorptr);
@@ -136,10 +157,16 @@ static void handleGlow(uintptr_t localPlayer) {
 
 void Glow::ESP() {
     setChams();
+    setBrightness();        // initial calls to set them for the first time using default values
+
     while (true) {
-        if (!glowEnabled()) {
+        if (glow_enabled) {
             uintptr_t localPlayer = Functions::getLocalPlayer();
             handleGlow(localPlayer);
+            if (call_brightness_on_loop){
+                setBrightness();
+                call_brightness_on_loop = false;
+            }
         }
         Sleep(1);
     }

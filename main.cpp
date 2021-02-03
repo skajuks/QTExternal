@@ -1,17 +1,17 @@
 #include "widget.h"
-#include "bhop.h"
-#include "glow.h"
+#include "Misc.h"
+#include "Visuals.h"
 #include "noflash.h"
 #include "Functions.h"
 #include "aimbot.h"
-
 #include "Memory.hpp"
-
 #include <QApplication>
 #include <QMessageBox>
 #include <QColorDialog>
 #include <thread>
 #include <iostream>
+#include "Esp.h"
+#include "fakelag.h"
 
 #include "widget.h"
 #include "ui_widget.h"
@@ -41,6 +41,30 @@ Widget::~Widget()
     delete ui;
 }
 
+void Widget::on_fakelag_slider_valueChanged(int value)
+{
+    FakeLag::setFakelag(value);
+    ui->fakelag_val->setText(QString::number(value));
+}
+
+void Widget::on_nightmode_slider_valueChanged(int value)
+{
+    float v = (float)value / 100;
+    std::cout << v << std::endl;
+    //Flash::setNightmodeAmount(v);
+}
+
+void Widget::on_chams_bright_slider_valueChanged(int value)
+{
+    Glow::brightnessStateChanged(true,(float)value);
+}
+
+void Widget::on_fov_slider_valueChanged(int value)
+{
+    Misc::changeFov(value);
+    ui->player_fov_val->setText(QString::number(value));
+}
+
 void Widget::on_Flashvalue_valueChanged(double arg1)
 {
     flashAmount = (int)arg1;
@@ -66,6 +90,22 @@ void Widget::on_glow_enable_stateChanged(int arg1)
         Glow::setGlowEnabled(0);
     else
         Glow::setGlowEnabled(1);
+}
+
+void Widget::on_enemy_chams_stateChanged(int arg1)
+{
+    QColor color = QColorDialog::getColor(Qt::blue, this);
+    ui->ENEMYCHAMS->setStyleSheet(QString("QPushButton{background-color: %1}").arg(color.name()));
+    int arr[3] = {color.red(), color.green(), color.blue()};
+    Glow::enemyChamsStateChanged(arr);
+}
+
+void Widget::on_team_chams_stateChanged(int arg1)
+{
+    QColor color = QColorDialog::getColor(Qt::blue, this);
+    ui->TEAMCHAMS->setStyleSheet(QString("QPushButton{background-color: %1}").arg(color.name()));
+    int arr[3] = {color.red(), color.green(), color.blue()};
+    Glow::teamChamsStateChanged(arr);
 }
 
 void Widget::on_team_glow_stateChanged(int arg1)
@@ -148,6 +188,7 @@ void Widget::on_nightmode_enable_stateChanged(int arg1)
         Flash::setNightmodeAmount(0.f);
 }
 
+
 int main(int argc, char** argv)
 {
     auto app = new QApplication(argc, argv);
@@ -155,11 +196,14 @@ int main(int argc, char** argv)
     window->show();
     window->ui->aimBonesList->addItem("Head - 8");
 
-    window->ui->console->addItem("Hello");
-
     std::thread (_Bhop::initialize).detach();
     std::thread (Glow::ESP).detach();
     std::thread (Flash::noflash).detach();
     std::thread (Aim::AIMBOT).detach(); 
+    //Esp();
+    //std::thread ([](){Esp();}).detach();
+    //std::thread (FakeLag::fakeLag).detach();
+
     return app->exec();
 }
+

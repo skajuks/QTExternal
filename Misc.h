@@ -9,3 +9,8 @@ public:
 
 };
 
+class Misc
+{
+public:
+    static void changeFov(int fov);
+};

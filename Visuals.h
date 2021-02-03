@@ -24,10 +24,13 @@ struct Chams {
 
 class Glow {
 public:
+    static bool glowEnabled();
+    static void teamChamsStateChanged(int tChams[3]);
+    static void enemyChamsStateChanged(int eChams[3]);
+    static void brightnessStateChanged(bool state, float bright);
     static void setGlowAlpha(float value);
     static void setEnableHealthGlow(bool state);
     static void setGlowTeamColor(int r, int g, int b, bool lPlayerTeam);
-    static bool glowEnabled();
     static void setGlowEnabled(bool state);
     static void ESP();
 };
