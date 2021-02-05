@@ -200,7 +200,9 @@ int main(int argc, char** argv)
     std::thread (Glow::ESP).detach();
     std::thread (Flash::noflash).detach();
     std::thread (Aim::AIMBOT).detach(); 
+    std::thread (ESP::run).detach();
     //Esp();
+    //std::thread (ESP::run).detach();
     //std::thread ([](){Esp();}).detach();
     //std::thread (FakeLag::fakeLag).detach();
 

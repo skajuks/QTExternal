@@ -6,7 +6,6 @@
 #include "cmath"
 #include <iostream>
 #include <limits>
-#define _USE_MATH_DEFINES
 
 #undef max
 
@@ -302,7 +301,7 @@ VECTOR2 normalAngles;
 VECTOR3 targetBones;
 VECTOR3 old_recoil{0.f, 0.f, 0.f};
 
-VECTOR2 getClosestEnemyByAngle(){               //redo this function, doesnt need while loop and toggle check
+void getClosestEnemyByAngle(){               //redo this function, doesnt need while loop and toggle check
 
     uintptr_t localPlayer = Functions::getLocalPlayer();
     float oldDistancex = std::numeric_limits<float>::max();;

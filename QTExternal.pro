@@ -9,28 +9,32 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    Drawings.cpp \
     Functions.cpp \
     MemMan.cpp \
     Misc.cpp \
+    Overlay.cpp \
     Visuals.cpp \
     aimbot.cpp \
+    d3d9.cpp \
     esp.cpp \
     fakelag.cpp \
     main.cpp \
-    noflash.cpp
+    noflash.cpp \
+    paint.cpp
 
 HEADERS += \
-    Drawings.h \
+    Color.h \
     Functions.h \
     MemMan.h \
     Misc.h \
     Visuals.h \
     aimbot.h \
+    d3d9draw.h \
     esp.h \
     fakelag.h \
     noflash.h \
     offsets.hpp \
+    paint.h \
     widget.h
 
 FORMS += \
@@ -41,9 +45,10 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-win32:CONFIG(release, debug|release): LIBS += -L'C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Lib/x86/' -ld3dx9
-else:win32:CONFIG(debug, debug|release): LIBS += -L'C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Lib/x86/' -ld3dx9d
+win32:CONFIG(release, debug|release): LIBS += -L'C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Lib/x86/' -ld3dx9 -ladvapi32 -luser32
+else:win32:CONFIG(debug, debug|release): LIBS += -L'C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Lib/x86/' -ld3dx9d -ladvapi32 -luser32
 
-INCLUDEPATH += 'C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Lib/x86'
+INCLUDEPATH += 'C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include'
 DEPENDPATH += 'C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Lib/x86'
 
+DEFINES += _USE_MATH_DEFINES

@@ -1,5 +1,8 @@
-#ifndef ESP_H
-#define ESP_H
+#pragma once
+#include <Windows.h>
 
-
-#endif // ESP_H
+class ESP{
+public:
+    static int APIENTRY run();
+    //HINSTANCE hInstance, HINSTANCE, LPSTR, INT
+};
