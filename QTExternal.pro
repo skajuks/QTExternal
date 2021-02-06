@@ -23,7 +23,6 @@ SOURCES += \
     paint.cpp
 
 HEADERS += \
-    Color.h \
     Functions.h \
     MemMan.h \
     Misc.h \

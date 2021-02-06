@@ -1,5 +1,16 @@
 #include "paint.h"
+#include "Functions.h"
+#include "offsets.hpp"
 
+using namespace hazedumper::netvars;
+using namespace hazedumper::signatures;
+
+class player_info {
+private:
+    char __pad[0x10];
+public:
+    char name[32];
+};
 
 int Paint::d3D9Init(HWND hWnd){
 
@@ -45,7 +56,34 @@ Paint::Paint(HWND hWnd, HWND targetWnd, int width, int height){
     d3D9Init(hWnd);
 }
 
+struct Vector3 {
+    float x, y, z;
+};
 
+struct view_matrix_t {
+    float matrix[16];
+};
+
+struct Vector3 WorldToScreen(const struct Vector3 pos, struct view_matrix_t matrix) {
+    struct Vector3 out;
+    float _x = matrix.matrix[0] * pos.x + matrix.matrix[1] * pos.y + matrix.matrix[2] * pos.z + matrix.matrix[3];
+    float _y = matrix.matrix[4] * pos.x + matrix.matrix[5] * pos.y + matrix.matrix[6] * pos.z + matrix.matrix[7];
+    out.z = matrix.matrix[12] * pos.x + matrix.matrix[13] * pos.y + matrix.matrix[14] * pos.z + matrix.matrix[15];
+
+    _x *= 1.f / out.z;
+    _y *= 1.f / out.z;
+
+    int width = 1600;
+    int height = 900;
+
+    out.x = width * .5f;
+    out.y = height * .5f;
+
+    out.x += 0.5f * _x * width + 0.5f;
+    out.y -= 0.5f * _y * height + 0.5f;
+
+    return out;
+}
 int Paint::render()
 {
     if (d3dDevice == nullptr)
@@ -55,10 +93,39 @@ int Paint::render()
 
     if (targetWnd == GetForegroundWindow())
     {
+        uintptr_t clientState = Functions::getClientState();
+        uintptr_t uinfoTable = Memory.readMem<uintptr_t>(clientState + dwClientState_PlayerInfo);
+        uintptr_t items = Memory.readMem<std::uintptr_t>(Memory.readMem<uintptr_t>(uinfoTable + 0x40) + 0xC);
+        view_matrix_t vm = Memory.readMem<view_matrix_t>(gameModule + dwViewMatrix);
+        uintptr_t localPlayer = Functions::getLocalPlayer();
+        int myTeam = Functions::getTeam(localPlayer);
+        for (short int i = 1; i < 32; i++) {
+            uintptr_t entity = Memory.readMem<uintptr_t>(gameModule + dwEntityList + i * 0x10);
+            if (entity != 0 && Functions::isAlive(entity) && Functions::getTeam(entity) != myTeam) {
+                player_info player = Memory.readMem<player_info>(Memory.readMem<uintptr_t>((items + 0x28) + (i * 0x34)));
+                Vector3 pos = Memory.readMem<Vector3>(entity + m_vecOrigin);
+                Vector3 head = {head.x = pos.x, head.y = pos.y, head.z = pos.z + 75.f};
+                Vector3 screenpos = WorldToScreen(pos, vm);
+                Vector3 screenhead = WorldToScreen(head, vm);
+                int height = screenpos.y - screenhead.y;
+                int width = height / 2;
+                screenhead.y += 30;
 
-        BorderBoxOutlined(100,100,140,250,2,100,100,100,255, 255, 0 ,1, 0);
-        StringOutlined((char*)"chady the speedrunner",120,80,255,0,1,0);
-        StringOutlined((char*)"HE grenade",140,360,255,0,1,0);
+                if(screenpos.z >= 0.01f){
+                    BorderBoxOutlined(screenhead.x - width / 2,screenhead.y,width,height,2,100,100,100,255, 255, 0 ,1, 0);
+                    StringOutlined((char*)player.name,screenhead.x - width / 2,screenhead.y - 10,255,0,1,0);
+                }
+            }
+
+        }
+        //check if esp is toggled on
+        //  entity loop
+        //  find entity name and weapon
+        // w2screen matrix
+        // if entity is correct, set entity box and name/weaopn esp
+
+        StringOutlined((char*)"QTExternal v1.2 by chady",5,30,255,0,1,0);   // watermark
+        //StringOutlined((char*)"HE grenade",140,360,255,0,1,0);
 
     }
 
@@ -68,7 +135,6 @@ int Paint::render()
 
     return 0;
 }
-
 
 void Paint::String(char* String, int x, int y, int a, int r, int g, int b)
 {

@@ -8,7 +8,7 @@
 // Global Variables:
 HINSTANCE hInst;                                // current instance
 WCHAR overlayWindowName[100] = L"Overlay";  // main window class name & The title bar text
-LPCSTR targetWindowName = "Card Suite Master Workplace";  // main window class name & The title bar text
+LPCSTR targetWindowName = "Counter-Strike: Global Offensive";  // main window class name & The title bar text
 HWND targetHWND, overlayHWND;
 int width, height;
 Paint paint;
