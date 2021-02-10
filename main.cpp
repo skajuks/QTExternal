@@ -11,7 +11,11 @@
 #include <thread>
 #include <iostream>
 #include "Esp.h"
+#include "paint.h"
 #include "fakelag.h"
+#include "offsets.hpp"
+#include "Structs.h"
+//#include "offsets.hpp"
 
 #include "widget.h"
 #include "ui_widget.h"
@@ -29,6 +33,82 @@ float nightmode_amount = 0.04f;
 int aimbot_on_key = 0x01; // mouse 1 default
 bool enable_silent = false;
 
+using namespace hazedumper::netvars;
+using namespace hazedumper::signatures;
+
+int main(int argc, char** argv) {
+    auto app = new QApplication(argc, argv);
+    auto window = new Widget;
+    window->show();
+    //std::cout << pOffsets.dwLocalPlayer << std::endl;
+    //window->ui->aimBonesList->addItem((char*)pOffsets.dwLocalPlayer);
+
+    // add a sigscan
+    std::thread([&](){
+        ClientInfo local_ci;
+        Entity local_entity;
+        ClientInfo ci;
+        Entity e;
+        uintptr_t glowObjectManager = Memory.readMem<uintptr_t>(gameModule + dwGlowObjectManager);
+
+        while(1 < 2) {
+            int entityIndex = 0;
+            std::cout << "---------------------------\n";
+            do {
+                Memory.readMemTo<ClientInfo>(gameModule + dwEntityList + entityIndex++ * 0x10, &ci);
+                Memory.readMemTo<Entity>(ci.entity, &e);
+
+                if(entityIndex == 1) {
+                    local_ci = ci;
+                    local_entity = e;
+                }
+
+                if(entityIndex >= 64)
+                    break;
+
+
+                if(e.health && ci.entity) {
+                    std::cout << "Entity " << std::dec << (entityIndex - 1) << " flags " << std::hex << e.health << std::endl;
+
+                    //Glow::ProcessEntity(ci, e, glowObjectManager);
+                }
+            } while(ci.nextEntity);
+
+            window->setWindowTitle(QString("Entity count: ") + QString::number(entityIndex + 1));
+            //std::cout << "Entity count: " << entityIndex << std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(16));
+        }
+    }).detach();
+
+    //Entity entity = Memory.readMemTo<Entity>(gameModule + dwEntityList + 0 * 0x10, );
+    //std::cout << enity;
+
+    //std::thread (_Bhop::initialize).detach();
+    //std::thread (Glow::ESP).detach();
+    //std::thread (Flash::noflash).detach();
+    //std::thread (Aim::AIMBOT).detach();
+    //std::thread (ESP::run).detach();
+
+    /*std::thread([&](){
+        while(1 < 2) {
+            //uintptr_t glowObject = Memory.readMem<uintptr_t>(gameModule + dwGlowObjectManager);
+
+            for (auto ent : entList->entList) {
+                if(ent.entptr){
+                    std::cout << ent.entptr->health << std::endl;
+
+                }
+            }
+
+
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    }).detach();*/
+
+    return app->exec();
+}
+
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::Widget)
@@ -39,6 +119,45 @@ Widget::Widget(QWidget *parent)
 Widget::~Widget()
 {
     delete ui;
+}
+
+void Widget::on_esp_snapline_color_stateChanged(int arg1)
+{
+    QColor color = QColorDialog::getColor(Qt::blue, this);
+    ui->SNAPCOL->setStyleSheet(QString("QPushButton{background-color: %1}").arg(color.name()));
+    Paint::colorChanged(1, 255, color.red(), color.green(), color.blue());
+}
+
+void Widget::on_esp_box_color_stateChanged(int arg1)
+{
+    QColor color = QColorDialog::getColor(Qt::blue, this);
+    ui->ESPCOL->setStyleSheet(QString("QPushButton{background-color: %1}").arg(color.name()));
+    Paint::colorChanged(2, 255, color.red(), color.green(), color.blue());
+}
+
+void Widget::on_esp_health_stateChanged(int arg1)
+{
+    Paint::StateChanged(5); // enable esp by health
+}
+
+void Widget::on_esp_snaplines_stateChanged(int arg1)
+{
+    Paint::StateChanged(4); // enable snaplines
+}
+
+void Widget::on_esp_name_weapon_stateChanged(int arg1)
+{
+    Paint::StateChanged(3); // esp health and name
+}
+
+void Widget::on_enable_boxes_stateChanged(int arg1)
+{
+    Paint::StateChanged(2); // esp boxes
+}
+
+void Widget::on_esp_enable_stateChanged(int arg1)
+{
+    Paint::StateChanged(1); // esp master
 }
 
 void Widget::on_fakelag_slider_valueChanged(int value)
@@ -189,23 +308,4 @@ void Widget::on_nightmode_enable_stateChanged(int arg1)
 }
 
 
-int main(int argc, char** argv)
-{
-    auto app = new QApplication(argc, argv);
-    auto window = new Widget;
-    window->show();
-    window->ui->aimBonesList->addItem("Head - 8");
-
-    std::thread (_Bhop::initialize).detach();
-    std::thread (Glow::ESP).detach();
-    std::thread (Flash::noflash).detach();
-    std::thread (Aim::AIMBOT).detach(); 
-    std::thread (ESP::run).detach();
-    //Esp();
-    //std::thread (ESP::run).detach();
-    //std::thread ([](){Esp();}).detach();
-    //std::thread (FakeLag::fakeLag).detach();
-
-    return app->exec();
-}
 

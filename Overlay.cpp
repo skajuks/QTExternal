@@ -18,7 +18,7 @@ ATOM                registerClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 
-int APIENTRY ESP::run()
+int ESP::run()
 {
     //UNREFERENCED_PARAMETER(hPrevInstance);
     //UNREFERENCED_PARAMETER(lpCmdLine);

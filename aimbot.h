@@ -1,4 +1,5 @@
-
+#include <windows.h>
+#include "Structs.h"
 class Aim
 {
 public:
@@ -8,5 +9,6 @@ public:
     static void setSmoothOnSlider(float value);
     static void setRecoilControlPerc(float value);
     static void toggleSilentAim(bool state);
+    static uintptr_t getClosestTeammate();
 };
 

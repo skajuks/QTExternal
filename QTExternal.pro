@@ -15,8 +15,7 @@ SOURCES += \
     Overlay.cpp \
     Visuals.cpp \
     aimbot.cpp \
-    d3d9.cpp \
-    esp.cpp \
+    csmath.cpp \
     fakelag.cpp \
     main.cpp \
     noflash.cpp \
@@ -26,9 +25,10 @@ HEADERS += \
     Functions.h \
     MemMan.h \
     Misc.h \
+    Structs.h \
     Visuals.h \
     aimbot.h \
-    d3d9draw.h \
+    csmath.h \
     esp.h \
     fakelag.h \
     noflash.h \
@@ -51,3 +51,4 @@ INCLUDEPATH += 'C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include
 DEPENDPATH += 'C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Lib/x86'
 
 DEFINES += _USE_MATH_DEFINES
+DEFINES += _CRT_FUNCTIONS_REQUIRED=1

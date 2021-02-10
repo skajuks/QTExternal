@@ -3,12 +3,14 @@
 #include "offsets.hpp"
 #include "Signatures.hpp"
 #include "NetVars.hpp"
+#include "Structs.h"
 
 using namespace hazedumper::netvars;
 using namespace hazedumper::signatures;
 
 Chams clr_team;
 Chams clr_enemy;
+
 uintptr_t glowObject;
 
 bool glow_enabled = false;
@@ -153,6 +155,16 @@ static void handleGlow(uintptr_t localPlayer) {
             }
         }
     }
+}
+
+void Glow::ProcessEntity(const ClientInfo& ci, const Entity& e, uintptr_t glowObject) {
+    int glowIndex = Memory.readMem<int>(ci.entity + m_iGlowIndex);
+    GlowObject eGlow;
+    Memory.readMemTo<GlowObject>(glowObject + (glowIndex * 0x38), &eGlow);
+
+    eGlow = setGlowColor(eGlow, e.health, ci.entity);
+
+    Memory.writeMemFrom<GlowObject>(glowObject + (glowIndex * 0x38), &eGlow);
 }
 
 void Glow::ESP() {

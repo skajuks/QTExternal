@@ -1,26 +1,7 @@
 
 #include <windows.h>
 
-
-struct GlowObject {
-    BYTE base[4];
-    float red;
-    float green;
-    float blue;
-    float alpha;
-    BYTE buffer[16];
-    bool renderWhenOccluded;
-    bool renderWhenUnoccluded;
-    bool fullBloom;
-    BYTE buffer2[5];
-    int glowstyle;
-};
-
-struct Chams {
-    BYTE red;
-    BYTE green;
-    BYTE blue;
-};
+#include "Structs.h"
 
 class Glow {
 public:
@@ -33,5 +14,7 @@ public:
     static void setGlowTeamColor(int r, int g, int b, bool lPlayerTeam);
     static void setGlowEnabled(bool state);
     static void ESP();
+
+    static void ProcessEntity(const ClientInfo& ci, const Entity& e, uintptr_t glowObject);
 };
 

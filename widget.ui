@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>741</width>
-    <height>617</height>
+    <height>440</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -28,7 +28,7 @@ color: rgb(255, 255, 255);</string>
      <x>10</x>
      <y>20</y>
      <width>271</width>
-     <height>371</height>
+     <height>411</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -215,24 +215,11 @@ color: rgb(255, 255, 255);</string>
      <string>Triggerbot</string>
     </property>
    </widget>
-   <widget class="QCheckBox" name="silent_enable_5">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>260</y>
-      <width>121</width>
-      <height>19</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>RCS</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="label_5">
     <property name="geometry">
      <rect>
       <x>70</x>
-      <y>280</y>
+      <y>270</y>
       <width>151</width>
       <height>16</height>
      </rect>
@@ -245,9 +232,9 @@ color: rgb(255, 255, 255);</string>
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>300</y>
+      <y>290</y>
       <width>251</width>
-      <height>61</height>
+      <height>111</height>
      </rect>
     </property>
    </widget>
@@ -272,16 +259,6 @@ color: rgb(255, 255, 255);</string>
      <rect>
       <x>200</x>
       <y>240</y>
-      <width>71</width>
-      <height>21</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="lineEdit_6">
-    <property name="geometry">
-     <rect>
-      <x>200</x>
-      <y>260</y>
       <width>71</width>
       <height>21</height>
      </rect>
@@ -362,7 +339,7 @@ color: rgb(255, 255, 255);</string>
      <x>290</x>
      <y>20</y>
      <width>181</width>
-     <height>371</height>
+     <height>411</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -381,7 +358,7 @@ color: rgb(255, 255, 255);</string>
      </rect>
     </property>
     <property name="text">
-     <string>Enable Glow</string>
+     <string>Master enable glow</string>
     </property>
    </widget>
    <widget class="QCheckBox" name="chams_enable">
@@ -479,32 +456,6 @@ border-width: 5px;
     </property>
     <property name="text">
      <string/>
-    </property>
-   </widget>
-   <widget class="QCheckBox" name="esp_enable">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>220</y>
-      <width>121</width>
-      <height>19</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Enable ESP Boxes</string>
-    </property>
-   </widget>
-   <widget class="QCheckBox" name="esp_enable_2">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>240</y>
-      <width>121</width>
-      <height>19</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Player names</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_11">
@@ -641,6 +592,169 @@ border-width: 5px;
      <string/>
     </property>
    </widget>
+   <widget class="QGroupBox" name="groupBox">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>220</y>
+      <width>181</width>
+      <height>191</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>ESP</string>
+    </property>
+    <widget class="QCheckBox" name="esp_enable">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>121</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Master enable ESP</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="enable_boxes">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>40</y>
+       <width>121</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Enable boxes</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="esp_box_color">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>60</y>
+       <width>121</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Set box color</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="esp_name_weapon">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>100</y>
+       <width>151</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Enable name and weapon</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="esp_snaplines">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>140</y>
+       <width>151</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Enable snaplines</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="esp_snapline_color">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>80</y>
+       <width>151</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Set snapline color</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="esp_enable_13">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>160</y>
+       <width>151</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Enable bone ESP</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="ESPCOL">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>160</x>
+       <y>60</y>
+       <width>16</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(100, 100, 255);
+border-radius: 10px;
+border-width: 5px;
+
+</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="SNAPCOL">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>160</x>
+       <y>80</y>
+       <width>16</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(69, 255, 137);
+border-radius: 10px;
+border-width: 5px;
+
+</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="esp_health">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>120</y>
+       <width>121</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>ESPbox shows health</string>
+     </property>
+    </widget>
+   </widget>
   </widget>
   <widget class="QGroupBox" name="MiscBox">
    <property name="geometry">
@@ -648,7 +762,7 @@ border-width: 5px;
      <x>480</x>
      <y>20</y>
      <width>251</width>
-     <height>371</height>
+     <height>411</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -957,16 +1071,6 @@ border-width: 5px;
    </property>
    <property name="text">
     <string>- user Chady</string>
-   </property>
-  </widget>
-  <widget class="QListWidget" name="console">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>400</y>
-     <width>721</width>
-     <height>211</height>
-    </rect>
    </property>
   </widget>
  </widget>

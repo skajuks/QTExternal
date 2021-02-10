@@ -61,6 +61,20 @@ private slots:
 
     void on_fakelag_slider_valueChanged(int value);
 
+    void on_esp_enable_stateChanged(int arg1);
+
+    void on_enable_boxes_stateChanged(int arg1);
+
+    void on_esp_name_weapon_stateChanged(int arg1);
+
+    void on_esp_snaplines_stateChanged(int arg1);
+
+    void on_esp_health_stateChanged(int arg1);
+
+    void on_esp_box_color_stateChanged(int arg1);
+
+    void on_esp_snapline_color_stateChanged(int arg1);
+
 private:
 
 };
