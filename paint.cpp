@@ -126,11 +126,7 @@ int Paint::render()
                     drawCrosshair();
                 }
 
-            int myTeam = Functions::getTeam(localPlayer);
-            for (short int i = 1; i < 32; i++) {
-                uintptr_t entity = Memory.readMem<uintptr_t>(gameModule + dwEntityList + i * 0x10);
-                if (entity != 0 && Functions::isAlive(entity) && Functions::getTeam(entity) != myTeam) {
-                    int entity_hp = Functions::getHealth(entity);
+
                     player_info player = Memory.readMem<player_info>(Memory.readMem<uintptr_t>((items + 0x28) + (i * 0x34)));
                     VECTOR3 pos = Memory.readMem<VECTOR3>(entity + m_vecOrigin);
                     VECTOR3 head = {head.x = pos.x, head.y = pos.y, head.z = pos.z + 75.f};
@@ -156,11 +152,12 @@ int Paint::render()
                             int weaponEnt = Memory.readMem<int>(gameModule + dwEntityList + ((weaponId & 0xFFF) - 1) * 0x10);
                             if(weaponEnt != NULL){
                                 int entityWeapon = Memory.readMem<int>(weaponEnt + m_iItemDefinitionIndex);
-                                std::string entityInfo = std::to_string(entity_hp) + "hp";
+                                char str[64];
+                                snprintf(str, 64, "%dhp", entity_hp);
 
                                 StringOutlined((char*)player.name,screenhead.x - width_f / 2,screenhead.y - 15,255,0,1,0, 255, 255, 255 ,255);
                                 StringOutlined((char*)Functions::getActiveWeapon(entityWeapon),screenhead.x - width_f / 2,screenhead.y + height_f + 5,255,0,1,0,255,255,255,255);
-                                StringOutlined((char*)entityInfo.c_str(),screenhead.x - width_f / 2,screenhead.y + height_f + 15,255,0,1,0,255,255,255,255);
+                                StringOutlined(str, screenhead.x - width_f / 2,screenhead.y + height_f + 15,255,0,1,0,255,255,255,255);
                             }
                             if(Functions::checkIfScoped(entity))
                                 StringOutlined((char*)"Scoped",screenhead.x - width_f / 2,screenhead.y - 30,255,0,1,0, 255, 65 ,255, 0);
@@ -170,8 +167,7 @@ int Paint::render()
             }
             StringOutlined((char*)watermark.c_str(),5,30,255,0,1,0, 255, 255, 255 ,255);   // watermark
         }
-    }
-    }
+
 
     d3dDevice->EndScene();
     d3dDevice->PresentEx(0, 0, 0, 0, 0);

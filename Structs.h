@@ -4,7 +4,6 @@
 #include "csmath.h"
 #include <stdint.h>
 
-
 struct CInput {
     BYTE __pad0x01[0xF1]; //we dont need these vars
     DWORD Commands;
@@ -46,9 +45,6 @@ struct GlowObject {
     BYTE _filler[16];
     bool renderWhenOccluded;
     bool renderWhenUnoccluded;
-    bool fullBloom;
-    BYTE _filler2[5];
-    int glowstyle;
 };
 
 struct Chams {
@@ -58,9 +54,25 @@ struct Chams {
 };
 
 struct Entity {
-    BYTE pad_0000[256]; //0x0000
-    int32_t health; //0x0100
-    int32_t flags; //0x0104
+    BYTE pad_0000[112]; //0x0000
+
+    int32_t clrRender; // 4bytes 0x0070
+
+    BYTE pad_00001[128];
+
+    int32_t team;   // 4 bytes 0x0F4
+
+    BYTE pad_0001[8];
+
+    int32_t health; // 4 bytes 0x0100
+    int32_t flags; // 4 bytes 0x0104   
+    VECTOR3 vecViewOffset; // 12 bytes 0x0108
+    VECTOR3 vecVelocity; // 12 bytes 0x0114
+
+    BYTE pad_0003[22];
+
+    VECTOR3 vecOrigin;  // 12 bytes 0x0138
+
 }; //Size: 0x0104
 
 struct ClientInfo {

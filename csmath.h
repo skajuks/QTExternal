@@ -1,6 +1,7 @@
 #ifndef CSMATH_H
 #define CSMATH_H
 #include <windows.h>
+
 #pragma once
 struct VECTOR2{
     float x,y;
@@ -66,10 +67,13 @@ public:
     float z;
 };
 
+// forward declare Entity
+class Entity;
+
 class Math
 {
 public:
-    static bool checkForVelocity(uintptr_t localPlayer);
+    static bool checkForVelocity(const Entity& local_entity);
     static VECTOR3 WorldToScreen(const VECTOR3 pos, view_matrix_t matrix);
     static VECTOR2 CalcDistance(float currx, float curry, float newx, float newy);
     static void normalizeAngles(float* viewAnglex, float* viewAngley);

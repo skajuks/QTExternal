@@ -76,7 +76,7 @@ void doSilentAim(VECTOR2 angles, bool CanShoot){
         CMDNumber = Memory.readMem<int>(incommingUserCMD + 0x04);
 
     CUserCmd cmd; // read the usercmd
-    cmd = Memory.readMem<CUserCmd>(currentUserCMD);
+    Memory.readMemTo<CUserCmd>(currentUserCMD, &cmd);
 
     cmd.ViewAngles.x = angles.x;
     cmd.ViewAngles.y = angles.y;
@@ -84,8 +84,8 @@ void doSilentAim(VECTOR2 angles, bool CanShoot){
     if(CanShoot) // triggers shooting if set to tru
         cmd.Buttons |= true;
 
-    Memory.writeMem<CUserCmd>(currentUserCMD, cmd);
-    Memory.writeMem<CUserCmd>(verifiedCurUserCMD, cmd);
+    Memory.writeMemFrom<CUserCmd>(currentUserCMD, &cmd);
+    Memory.writeMemFrom<CUserCmd>(verifiedCurUserCMD, &cmd);
 
     Memory.writeMem<BYTE>(engineModule + dwbSendPackets, 1); //restore packet sending :)
 }
@@ -100,7 +100,7 @@ VECTOR3 old_recoil{0.f, 0.f, 0.f};
 int noAimbotEntityArray[] = {41,42,43,44,45,46,47,48,49,57,59};
 
 bool in_array(const int store[], const int storeSize, const int querry){
-    for(size_t i=0; i<storeSize; i++){
+    for(short int i=0; i<storeSize; i++){
         if(store[i] == querry)
             return true;
     }
@@ -109,16 +109,12 @@ bool in_array(const int store[], const int storeSize, const int querry){
 
 uintptr_t Aim::getClosestTeammate(){               //redo this function, doesnt need while loop and toggle check
 
-    uintptr_t localPlayer = Functions::getLocalPlayer();
     float oldDistancex = std::numeric_limits<float>::max();;
     float oldDistancey = std::numeric_limits<float>::max();;
     VECTOR3 angleTo;
     VECTOR3 AimAngle;
     uintptr_t target = NULL;
 
-    for(short int i = 0; i < 32; i++){
-        uintptr_t entity = Functions::getEntity(i);
-        if(Functions::getTeam(entity) == Functions::getTeam(localPlayer) && Functions::isAlive(entity)){
             pPos = Math::PlayerPos(localPlayer);
             entBone = Math::getBoneMatrix(entity, bone_int);
             pAngle = Math::PlayerAngles();

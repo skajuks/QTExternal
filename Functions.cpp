@@ -15,44 +15,12 @@ uintptr_t engineModule = Memory.getModule(process_id, L"engine.dll");
 uintptr_t engineModulep = Functions::getClientState();
 //Offsets pOffsets = Memory.getOffsets(process_id);
 
-
-
 uintptr_t Functions::getClientState() {
     return Memory.readMem<uintptr_t>(engineModule + dwClientState);
 }
 
-void Functions::checkForLocalPlayer() {
-    uintptr_t localPlayer = Memory.readMem<uintptr_t>(gameModule + dwLocalPlayer);
-    if (localPlayer == NULL)
-        while (localPlayer == NULL)
-            localPlayer = Memory.readMem<uintptr_t>(gameModule + dwLocalPlayer);
-}
-
-uintptr_t Functions::getLocalPlayer() {
-    return Memory.readMem<uintptr_t>(gameModule + dwLocalPlayer);
-}
-
-int Functions::getHealth(uintptr_t entity) {
-    return Memory.readMem<int>(entity + m_iHealth);
-}
-
-bool Functions::isAlive(uintptr_t entity) {
-    if (getHealth(entity) > 0)
-        return true;
-    else
-        return false;
-}
-
 bool Functions::isDefusing(uintptr_t entity) {
     return Memory.readMem<bool>(entity + m_bIsDefusing);
-}
-
-int Functions::getTeam(uintptr_t entity) {
-    return Memory.readMem<int>(entity + m_iTeamNum);
-}
-
-BYTE Functions::getFlag(uintptr_t localPlayer) {
-    return Memory.readMem<BYTE>(localPlayer + m_fFlags);
 }
 
 bool Functions::isGameRunning(){
@@ -82,12 +50,6 @@ bool Functions::isGameRunning(){
         return true;
     else
         return false;
-
-
-}
-
-int Functions::getFlashDuration(uintptr_t localPlayer) {
-    return Memory.readMem<int>(localPlayer + m_flFlashDuration);
 }
 
 void Functions::setFlashDuration(uintptr_t localPlayer, int duration) {
@@ -104,9 +66,6 @@ bool Functions::checkIfScoped(uintptr_t entity) {
 
 char* Functions::getActiveWeapon(int entityWeapon)
 {
-    // should figure out a way to clean this up, 3 rpm calls for this is a bit much
-
-    // also move this shit somewhere else, its ugly af
         switch(entityWeapon){
             case 1: return (char*)"Desert Eagle";
             case 2: return (char*)"Dual Berettas";

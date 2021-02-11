@@ -7,18 +7,19 @@
 #define _USE_MATH_DEFINES
 #include <iostream>
 #include <limits>
+#include "Structs.h" // lai header fwd decl dabu defu Entity
+
 using namespace hazedumper::netvars;
 using namespace hazedumper::signatures;
 
 
-bool Math::checkForVelocity(uintptr_t localPlayer)
+bool Math::checkForVelocity(const Entity& local_entity)
 {
-    VECTOR3 vel = Memory.readMem<VECTOR3>(localPlayer + m_vecVelocity);
+    VECTOR3 vel = local_entity.vecVelocity;
     int sum = vel.x + vel.y + vel.z;
     if(sum != 0)
         return false;
-    else
-        return true;
+    return true;
 }
 
 VECTOR3 Math::WorldToScreen(const VECTOR3 pos, view_matrix_t matrix) {

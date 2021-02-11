@@ -15,6 +15,8 @@ public:
     static void setGlowEnabled(bool state);
     static void ESP();
 
-    static void ProcessEntity(const ClientInfo& ci, const Entity& e, uintptr_t glowObject);
+    static void setBrightness();
+    static void ProcessEntityEnemy(const ClientInfo& ci, const Entity& e, uintptr_t glowObject);
+    static void ProcessEntityTeam(const ClientInfo& ci, uintptr_t glowObject);
 };
 

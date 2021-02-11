@@ -18,7 +18,6 @@ SOURCES += \
     csmath.cpp \
     fakelag.cpp \
     main.cpp \
-    noflash.cpp \
     paint.cpp
 
 HEADERS += \
@@ -31,7 +30,6 @@ HEADERS += \
     csmath.h \
     esp.h \
     fakelag.h \
-    noflash.h \
     offsets.hpp \
     paint.h \
     widget.h

@@ -1,29 +1,29 @@
 #include "Visuals.h"
 #include "Functions.h"
 #include "offsets.hpp"
-#include "Signatures.hpp"
 #include "NetVars.hpp"
 #include "Structs.h"
+#include "paint.h"
 
 using namespace hazedumper::netvars;
 using namespace hazedumper::signatures;
 
-Chams clr_team;
-Chams clr_enemy;
+Chams clr_team = {255,255,0};
+Chams clr_enemy = {0,255,255};
 
-uintptr_t glowObject;
+Paint Paint();
 
 bool glow_enabled = false;
-bool enableHealthGlow = false;
+bool enableHealthGlow = true;
 bool call_brightness_on_loop = false;
 float alpha = 1.f;
 
 float brightness = 100.f;
 
 // team glows
-BYTE TeamR = 0;
+BYTE TeamR = 255;
 BYTE TeamG = 0;
-BYTE TeamB = 255;
+BYTE TeamB = 0;
 
 //enemy glows
 BYTE ETeamR = 0;
@@ -36,7 +36,6 @@ bool Glow::glowEnabled(){
     else
         return false;
 }
-
 
 void Glow::teamChamsStateChanged(int tChams[3]){
     clr_team.red = (BYTE)tChams[0];
@@ -53,7 +52,7 @@ void Glow::enemyChamsStateChanged(int eChams[3]){
 
 void Glow::brightnessStateChanged(bool state, float bright){
     brightness = bright;
-    call_brightness_on_loop = state;
+    setBrightness();
 }
 
 void Glow::setGlowEnabled(bool state){
@@ -101,85 +100,37 @@ static GlowObject setGlowColor(GlowObject glow, int health, uintptr_t entity) {
     return glow;
 }
 
-static void setEnemyGlow(uintptr_t entity, int glowIndex) {
-    GlowObject eGlow;
-    eGlow = Memory.readMem<GlowObject>(glowObject + (glowIndex * 0x38));
-    int health = Memory.readMem<int>(entity + m_iHealth);
-    eGlow = setGlowColor(eGlow, health, entity);
-    Memory.writeMem<GlowObject>(glowObject + (glowIndex * 0x38), eGlow);
-}
-
-static void setTeamGlow(uintptr_t entity, int glowIndex) {
-    GlowObject tGlow;
-    tGlow = Memory.readMem<GlowObject>(glowObject + (glowIndex * 0x38));
-    tGlow.blue = TeamB;
-    tGlow.red = TeamR;
-    tGlow.green = TeamG;
-    tGlow.alpha = alpha;
-    tGlow.renderWhenOccluded = true;
-    tGlow.renderWhenUnoccluded = false;
-    Memory.writeMem<GlowObject>(glowObject + (glowIndex * 0x38), tGlow);
-}
-
-static void setChams() {
-    clr_enemy.blue = 255;
-    clr_enemy.green = 255;
-    clr_enemy.red = 0;
-
-    clr_team.red = 255;
-    clr_team.green = 255;
-    clr_team.blue = 0;
-}
-
-static void setBrightness() {
+void Glow::setBrightness() {
     int ptr = Memory.readMem<int>(engineModule + model_ambient_min);
     int xorptr = *(int*)&brightness ^ ptr;
     Memory.writeMem<int>(engineModule + model_ambient_min, xorptr);
 }
 
-static void handleGlow(uintptr_t localPlayer) {
-    glowObject = Memory.readMem<uintptr_t>(gameModule + dwGlowObjectManager);
-    int myTeam = Functions::getTeam(localPlayer);
-    for (short int i = 1; i < 32; i++) {
-        uintptr_t entity = Memory.readMem<uintptr_t>(gameModule + dwEntityList + i * 0x10);
-        if (entity != 0 && Functions::isAlive(entity)) {
-            int glowIndex = Memory.readMem<int>(entity + m_iGlowIndex);
-            int entityteam = Functions::getTeam(entity);
-            if (myTeam == entityteam) {
-                setTeamGlow(entity, glowIndex);
-                Memory.writeMem<Chams>(entity + m_clrRender, clr_team);
-            }
-            else {
-                setEnemyGlow(entity, glowIndex);
-                Memory.writeMem<Chams>(entity + m_clrRender, clr_enemy);
-            }
-        }
-    }
+void Glow::ProcessEntityTeam(const ClientInfo& ci, uintptr_t glowObject) {
+    int glowIndex = Memory.readMem<int>(ci.entity + m_iGlowIndex);
+    GlowObject tGlow;
+    Memory.readMemTo<GlowObject>(glowObject + (glowIndex * 0x38), &tGlow);
+    //tGlow = {{}, (float)TeamR, (float)TeamG, (float)TeamB, alpha, {}, true, false};
+    tGlow.red = TeamR;
+    tGlow.green = TeamG;
+    tGlow.blue = TeamB;
+    tGlow.alpha = alpha;
+    tGlow.renderWhenOccluded = true;
+    tGlow.renderWhenUnoccluded = false;
+    Memory.writeMemFrom<GlowObject>(glowObject + (glowIndex * 0x38), &tGlow);
+    Memory.writeMemFrom<Chams>(ci.entity + m_clrRender, &clr_team);
 }
 
-void Glow::ProcessEntity(const ClientInfo& ci, const Entity& e, uintptr_t glowObject) {
+void Glow::ProcessEntityEnemy(const ClientInfo& ci, const Entity& e, uintptr_t glowObject) {
     int glowIndex = Memory.readMem<int>(ci.entity + m_iGlowIndex);
     GlowObject eGlow;
     Memory.readMemTo<GlowObject>(glowObject + (glowIndex * 0x38), &eGlow);
-
     eGlow = setGlowColor(eGlow, e.health, ci.entity);
-
     Memory.writeMemFrom<GlowObject>(glowObject + (glowIndex * 0x38), &eGlow);
+    Memory.writeMemFrom<Chams>(ci.entity + m_clrRender, &clr_enemy);
 }
 
-void Glow::ESP() {
-    setChams();
-    setBrightness();        // initial calls to set them for the first time using default values
+void ProcessD3D9Render(){
+    Paint().drawCrosshair();
 
-    while (true) {
-        if (glow_enabled) {
-            uintptr_t localPlayer = Functions::getLocalPlayer();
-            handleGlow(localPlayer);
-            if (call_brightness_on_loop){
-                setBrightness();
-                call_brightness_on_loop = false;
-            }
-        }
-        Sleep(1);
-    }
 }

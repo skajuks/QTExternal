@@ -1,10 +1,8 @@
 #include "widget.h"
 #include "Misc.h"
 #include "Visuals.h"
-#include "noflash.h"
 #include "Functions.h"
 #include "aimbot.h"
-#include "Memory.hpp"
 #include <QApplication>
 #include <QMessageBox>
 #include <QColorDialog>
@@ -15,7 +13,6 @@
 #include "fakelag.h"
 #include "offsets.hpp"
 #include "Structs.h"
-//#include "offsets.hpp"
 
 #include "widget.h"
 #include "ui_widget.h"
@@ -44,16 +41,21 @@ int main(int argc, char** argv) {
     //window->ui->aimBonesList->addItem((char*)pOffsets.dwLocalPlayer);
 
     // add a sigscan
-    std::thread([&](){
+
+    std::thread([](){
         ClientInfo local_ci;
         Entity local_entity;
         ClientInfo ci;
         Entity e;
         uintptr_t glowObjectManager = Memory.readMem<uintptr_t>(gameModule + dwGlowObjectManager);
 
+        // init static features that doesn't need updates
+
+        Glow::setBrightness();
+        //Misc::setNightmodeAmount(0.09f);
+
         while(1 < 2) {
             int entityIndex = 0;
-            std::cout << "---------------------------\n";
             do {
                 Memory.readMemTo<ClientInfo>(gameModule + dwEntityList + entityIndex++ * 0x10, &ci);
                 Memory.readMemTo<Entity>(ci.entity, &e);
@@ -64,47 +66,28 @@ int main(int argc, char** argv) {
                 }
 
                 if(entityIndex >= 64)
-                    break;
+                    break;      // checks only player entities [max = 64]
 
+                if(e.health && ci.entity) { // checks if entity not NULL and is alive
 
-                if(e.health && ci.entity) {
-                    std::cout << "Entity " << std::dec << (entityIndex - 1) << " flags " << std::hex << e.health << std::endl;
+                    Misc::setBhop(local_entity);
+                    Misc::setNoFlash(local_ci);
 
-                    //Glow::ProcessEntity(ci, e, glowObjectManager);
+                   //std::cout << "Entity " << (entityIndex - 1) << " health " << e.health << std::endl;
+
+                    if(e.team == local_entity.team){
+                        Glow::ProcessEntityTeam(ci, glowObjectManager);
+                    }
+                    else {
+                        Glow::ProcessEntityEnemy(ci, e, glowObjectManager);
+                    }
                 }
             } while(ci.nextEntity);
 
-            window->setWindowTitle(QString("Entity count: ") + QString::number(entityIndex + 1));
             //std::cout << "Entity count: " << entityIndex << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(16));
+            std::this_thread::sleep_for(std::chrono::milliseconds(2));
         }
     }).detach();
-
-    //Entity entity = Memory.readMemTo<Entity>(gameModule + dwEntityList + 0 * 0x10, );
-    //std::cout << enity;
-
-    //std::thread (_Bhop::initialize).detach();
-    //std::thread (Glow::ESP).detach();
-    //std::thread (Flash::noflash).detach();
-    //std::thread (Aim::AIMBOT).detach();
-    //std::thread (ESP::run).detach();
-
-    /*std::thread([&](){
-        while(1 < 2) {
-            //uintptr_t glowObject = Memory.readMem<uintptr_t>(gameModule + dwGlowObjectManager);
-
-            for (auto ent : entList->entList) {
-                if(ent.entptr){
-                    std::cout << ent.entptr->health << std::endl;
-
-                }
-            }
-
-
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-    }).detach();*/
 
     return app->exec();
 }
@@ -180,7 +163,7 @@ void Widget::on_chams_bright_slider_valueChanged(int value)
 
 void Widget::on_fov_slider_valueChanged(int value)
 {
-    Misc::changeFov(value);
+    //Misc::changeFov(value);
     ui->player_fov_val->setText(QString::number(value));
 }
 
@@ -197,10 +180,10 @@ void Widget::on_glowAlpha_valueChanged(double arg1)
 
 void Widget::on_bhop__enable_stateChanged(int arg1)
 {
-    if (_Bhop::bhopEnabled())
-        _Bhop::setBhopEnabled(0);
+    if (Misc::bhopEnabled())
+        Misc::setBhopEnabled(0);
     else
-        _Bhop::setBhopEnabled(1);
+        Misc::setBhopEnabled(1);
 }
 
 void Widget::on_glow_enable_stateChanged(int arg1)
@@ -250,7 +233,7 @@ void Widget::on_health_glow_stateChanged(int arg1)
 void Widget::on_noflash_enable_stateChanged(int arg1)
 {
     ToggleNoFlash = !ToggleNoFlash;
-    Flash::setEnabledNoFlash(ToggleNoFlash);
+    Misc::setEnabledNoFlash(ToggleNoFlash);
 }
 
 void Widget::on_aim_enable_stateChanged(int arg1)
@@ -295,16 +278,16 @@ void Widget::on_silent_enable_stateChanged(int arg1)
 void Widget::on_doubleSpinBox_2_valueChanged(double arg1)
 {
     nightmode_amount = arg1;
-    Flash::setNightmodeAmount(nightmode_amount);
+    Misc::setNightmodeAmount(nightmode_amount);
 }
 
 void Widget::on_nightmode_enable_stateChanged(int arg1)
 {
     night_state = !night_state;
     if(night_state)
-        Flash::setNightmodeAmount(nightmode_amount);
+        Misc::setNightmodeAmount(nightmode_amount);
     else
-        Flash::setNightmodeAmount(0.f);
+        Misc::setNightmodeAmount(0.f);
 }
 
 
