@@ -22,20 +22,17 @@ bool Math::checkForVelocity(const Entity& local_entity)
     return true;
 }
 
-VECTOR3 Math::WorldToScreen(const VECTOR3 pos, view_matrix_t matrix) {
+VECTOR3 Math::WorldToScreen(const VECTOR3 pos, view_matrix_t* matrix, int width, int height) {
 
     // this shit should be moved to math cpp
 
     VECTOR3 out;
-    float _x = matrix.matrix[0] * pos.x + matrix.matrix[1] * pos.y + matrix.matrix[2] * pos.z + matrix.matrix[3];
-    float _y = matrix.matrix[4] * pos.x + matrix.matrix[5] * pos.y + matrix.matrix[6] * pos.z + matrix.matrix[7];
-    out.z = matrix.matrix[12] * pos.x + matrix.matrix[13] * pos.y + matrix.matrix[14] * pos.z + matrix.matrix[15];
+    float _x = matrix->matrix[0] * pos.x + matrix->matrix[1] * pos.y + matrix->matrix[2] * pos.z + matrix->matrix[3];
+    float _y = matrix->matrix[4] * pos.x + matrix->matrix[5] * pos.y + matrix->matrix[6] * pos.z + matrix->matrix[7];
+    out.z = matrix->matrix[12] * pos.x + matrix->matrix[13] * pos.y + matrix->matrix[14] * pos.z + matrix->matrix[15];
 
     _x *= 1.f / out.z;
     _y *= 1.f / out.z;
-
-    int width = 1920;
-    int height = 1080;
 
     out.x = width * .5f;
     out.y = height * .5f;

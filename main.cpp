@@ -1,52 +1,58 @@
 #include "widget.h"
 #include "Misc.h"
-#include "Visuals.h"
+#include <iostream>
+#include <limits>
+#include <cstddef>
+//#include "Visuals.h"
 #include "Functions.h"
 #include "aimbot.h"
 #include <QApplication>
 #include <QMessageBox>
 #include <QColorDialog>
-#include <thread>
+#include <thread>                   // fix these damn imports so they are grouped by libs and actual feature headers
 #include <iostream>
-#include "Esp.h"
 #include "paint.h"
 #include "fakelag.h"
 #include "offsets.hpp"
 #include "Structs.h"
 
+#include "entity.h"
+
+
 #include "widget.h"
 #include "ui_widget.h"
 
-bool toggleHealthGlow = false;
-bool ToggleNoFlash = false;
-bool toggleAimbot = false;
-int aimbot_fov = 1;
-bool night_state = false;
-float aimbot_smooth = 1.f;
-float aimbot_recoil = 1.f;
-float glow_alpha = 1.f;
-int flashAmount = 0;
-float nightmode_amount = 0.04f;
-int aimbot_on_key = 0x01; // mouse 1 default
-bool enable_silent = false;
+bool  toggleHealthGlow  = false;
+bool  ToggleNoFlash     = false;
+bool  toggleAimbot      = false;
+int   aimbot_fov        =     1;
+bool  night_state       = false;
+float aimbot_smooth     =   1.f;                            // fix this fucking shit, fix camel cases being applied on vars
+float aimbot_recoil     =   1.f;
+float glow_alpha        =   1.f;
+int   flashAmount       =     0;
+float nightmode_amount  = 0.04f;
+int   aimbot_on_key     =  0x01;                            // mouse 1 default
+bool  enable_silent     = false;
+
+int aimfov = 20;
 
 using namespace hazedumper::netvars;
 using namespace hazedumper::signatures;
+
+class Glow;
 
 int main(int argc, char** argv) {
     auto app = new QApplication(argc, argv);
     auto window = new Widget;
     window->show();
-    //std::cout << pOffsets.dwLocalPlayer << std::endl;
-    //window->ui->aimBonesList->addItem((char*)pOffsets.dwLocalPlayer);
 
-    // add a sigscan
+    // add a sigscan here
 
-    std::thread([](){
-        ClientInfo local_ci;
-        Entity local_entity;
-        ClientInfo ci;
-        Entity e;
+    // add d3d9 thread here
+
+    std::thread([&](){
+
         uintptr_t glowObjectManager = Memory.readMem<uintptr_t>(gameModule + dwGlowObjectManager);
 
         // init static features that doesn't need updates
@@ -56,34 +62,44 @@ int main(int argc, char** argv) {
 
         while(1 < 2) {
             int entityIndex = 0;
-            do {
-                Memory.readMemTo<ClientInfo>(gameModule + dwEntityList + entityIndex++ * 0x10, &ci);
-                Memory.readMemTo<Entity>(ci.entity, &e);
 
-                if(entityIndex == 1) {
-                    local_ci = ci;
-                    local_entity = e;
-                }
+            float oldx = std::numeric_limits<float>::max();;
+            float oldy = std::numeric_limits<float>::max();;
+            ClientInfo target;
+
+            do {
+                Memory.readMemTo<ClientInfo>(gameModule + dwEntityList * 0x10, &ci[entityIndex++]);
+                Memory.readMemTo<Entity>(ci[entityIndex].entity, &e[entityIndex]);
 
                 if(entityIndex >= 64)
                     break;      // checks only player entities [max = 64]
 
-                if(e.health && ci.entity) { // checks if entity not NULL and is alive
+                if(e[entityIndex].health && ci[entityIndex].entity) { // checks if entity not NULL and is alive
 
-                    Misc::setBhop(local_entity);
-                    Misc::setNoFlash(local_ci);
+                    Misc::setBhop(e[0]);
+                    Misc::setNoFlash(ci[0]);
 
-                   //std::cout << "Entity " << (entityIndex - 1) << " health " << e.health << std::endl;
-
-                    if(e.team == local_entity.team){
-                        Glow::ProcessEntityTeam(ci, glowObjectManager);
+                    if(e[entityIndex].team == e[0].team){
+                        Glow::ProcessEntityTeam(ci[entityIndex], glowObjectManager);
                     }
                     else {
-                        Glow::ProcessEntityEnemy(ci, e, glowObjectManager);
+                        Glow::ProcessEntityEnemy(ci[entityIndex], e[entityIndex], glowObjectManager);
+
+                        VECTOR2 newDistance = Aim::getClosestEntity(e[0], ci[entityIndex]);
+                        if(newDistance.x < oldx && newDistance.y < oldy && newDistance.x <= aimfov && newDistance.y <= aimfov){
+                            oldx = newDistance.x;
+                            oldy = newDistance.y;
+                            target = ci[entityIndex];   // execute code only if aimbot is actually enabled
+                        }
                     }
                 }
-            } while(ci.nextEntity);
+            } while(ci[entityIndex].nextEntity);
 
+            //Aim::getClosestEnemyByAngle(e, ci);     // this needs to be outside the loop because all entities are required
+
+            if(target.entity){
+                Aim::executeAimbot(target, e[0], ci[0]);        // execute code only if aimbot is actually enabled
+            }
             //std::cout << "Entity count: " << entityIndex << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(2));
         }
@@ -108,39 +124,39 @@ void Widget::on_esp_snapline_color_stateChanged(int arg1)
 {
     QColor color = QColorDialog::getColor(Qt::blue, this);
     ui->SNAPCOL->setStyleSheet(QString("QPushButton{background-color: %1}").arg(color.name()));
-    Paint::colorChanged(1, 255, color.red(), color.green(), color.blue());
+    Glow::colorChanged(1, 255, color.red(), color.green(), color.blue());
 }
 
 void Widget::on_esp_box_color_stateChanged(int arg1)
 {
     QColor color = QColorDialog::getColor(Qt::blue, this);
     ui->ESPCOL->setStyleSheet(QString("QPushButton{background-color: %1}").arg(color.name()));
-    Paint::colorChanged(2, 255, color.red(), color.green(), color.blue());
+    Glow::colorChanged(2, 255, color.red(), color.green(), color.blue());
 }
 
 void Widget::on_esp_health_stateChanged(int arg1)
 {
-    Paint::StateChanged(5); // enable esp by health
+    Glow::StateChanged(5); // enable esp by health
 }
 
 void Widget::on_esp_snaplines_stateChanged(int arg1)
 {
-    Paint::StateChanged(4); // enable snaplines
+    Glow::StateChanged(4); // enable snaplines
 }
 
 void Widget::on_esp_name_weapon_stateChanged(int arg1)
 {
-    Paint::StateChanged(3); // esp health and name
+    Glow::StateChanged(3); // esp health and name
 }
 
 void Widget::on_enable_boxes_stateChanged(int arg1)
 {
-    Paint::StateChanged(2); // esp boxes
+    Glow::StateChanged(2); // esp boxes
 }
 
 void Widget::on_esp_enable_stateChanged(int arg1)
 {
-    Paint::StateChanged(1); // esp master
+    Glow::StateChanged(1); // esp master
 }
 
 void Widget::on_fakelag_slider_valueChanged(int value)
@@ -278,16 +294,16 @@ void Widget::on_silent_enable_stateChanged(int arg1)
 void Widget::on_doubleSpinBox_2_valueChanged(double arg1)
 {
     nightmode_amount = arg1;
-    Misc::setNightmodeAmount(nightmode_amount);
+    //Misc::setNightmodeAmount(nightmode_amount);
 }
 
 void Widget::on_nightmode_enable_stateChanged(int arg1)
 {
     night_state = !night_state;
-    if(night_state)
-        Misc::setNightmodeAmount(nightmode_amount);
-    else
-        Misc::setNightmodeAmount(0.f);
+    //if(night_state)
+        //Misc::setNightmodeAmount(nightmode_amount);
+    //else
+        //Misc::setNightmodeAmount(0.f);
 }
 
 

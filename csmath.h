@@ -74,7 +74,7 @@ class Math
 {
 public:
     static bool checkForVelocity(const Entity& local_entity);
-    static VECTOR3 WorldToScreen(const VECTOR3 pos, view_matrix_t matrix);
+    static VECTOR3 WorldToScreen(const VECTOR3 pos, view_matrix_t* matrix, int width, int height);
     static VECTOR2 CalcDistance(float currx, float curry, float newx, float newy);
     static void normalizeAngles(float* viewAnglex, float* viewAngley);
     static VECTOR3 CalcAngle(VECTOR3 src, VECTOR3 dst);

@@ -14,9 +14,11 @@ public:
     static void setGlowTeamColor(int r, int g, int b, bool lPlayerTeam);
     static void setGlowEnabled(bool state);
     static void ESP();
-
+    static void StateChanged(int funct);
+    static void colorChanged(int funct, int a, int r, int g, int b);
     static void setBrightness();
     static void ProcessEntityEnemy(const ClientInfo& ci, const Entity& e, uintptr_t glowObject);
     static void ProcessEntityTeam(const ClientInfo& ci, uintptr_t glowObject);
+    static void ProcessD3D9Render(const ClientInfo& ci, const Entity& e);
 };
 

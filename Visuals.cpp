@@ -1,9 +1,10 @@
-#include "Visuals.h"
+
 #include "Functions.h"
 #include "offsets.hpp"
 #include "NetVars.hpp"
-#include "Structs.h"
 #include "paint.h"
+
+class Glow;
 
 using namespace hazedumper::netvars;
 using namespace hazedumper::signatures;
@@ -11,7 +12,7 @@ using namespace hazedumper::signatures;
 Chams clr_team = {255,255,0};
 Chams clr_enemy = {0,255,255};
 
-Paint Paint();
+//Paint Paint();
 
 bool glow_enabled = false;
 bool enableHealthGlow = true;
@@ -35,6 +36,35 @@ bool Glow::glowEnabled(){
         return true;
     else
         return false;
+}
+
+// toggles
+bool master_esp_toggle = false;
+bool boxes_enabled = false;
+bool snapl_enabled = false;
+bool weapon_health_enabled = false;
+bool boxes_by_health_enabled = false;
+
+// init colors
+Color snaplineColor = {255,100,100,100};
+Color espBoxColor = {100,100,100,255};
+Color crosshairColor = {255,50,205,50};
+
+void Glow::StateChanged(int funct){
+    switch(funct){
+    case 1: master_esp_toggle = !master_esp_toggle;                 // toggle esp master
+    case 2: boxes_enabled = !boxes_enabled;                         // toggle esp boxes
+    case 3: weapon_health_enabled = !weapon_health_enabled;         // toggle esp health, active weapon and player name
+    case 4: snapl_enabled = !snapl_enabled;                         // toggle snaplines
+    case 5: boxes_by_health_enabled = !boxes_by_health_enabled;     // toggle esp draw by health
+    }
+}
+
+void Glow::colorChanged(int funct, int a, int r, int g, int b){
+    switch(funct){
+    case 1: snaplineColor.a = a; snaplineColor.r = r; snaplineColor.g = g; snaplineColor.b = b;  // change snapline color
+    case 2: espBoxColor.a = a; espBoxColor.r = r; espBoxColor.g = g; espBoxColor.b = b;          // change esp box color
+    }
 }
 
 void Glow::teamChamsStateChanged(int tChams[3]){
@@ -130,7 +160,51 @@ void Glow::ProcessEntityEnemy(const ClientInfo& ci, const Entity& e, uintptr_t g
     Memory.writeMemFrom<Chams>(ci.entity + m_clrRender, &clr_enemy);
 }
 
-void ProcessD3D9Render(){
-    Paint().drawCrosshair();
+void Glow::ProcessD3D9Render(const ClientInfo& ci, const Entity& e){
+    if(master_esp_toggle){
+        player_info player;
+        uintptr_t clientState = Functions::getClientState();
+        uintptr_t uinfoTable = Memory.readMem<uintptr_t>(clientState + dwClientState_PlayerInfo);
+        uintptr_t items = Memory.readMem<std::uintptr_t>(Memory.readMem<uintptr_t>(uinfoTable + 0x40) + 0xC);
+        Memory.readMemTo<player_info>(Memory.readMem<uintptr_t>((items + 0x28) + (ci.entity * 0x34)), &player);   // read player struct
 
+        view_matrix_t vm;
+        Memory.readMemTo<view_matrix_t>(gameModule + dwViewMatrix, &vm);    // read player viewmatrix
+
+        VECTOR3 head = {head.x = e.vecOrigin.x, head.y = e.vecOrigin.y, head.z = e.vecOrigin.z + 75.f};
+        VECTOR3 screenpos = Math::WorldToScreen(e.vecOrigin, &vm, Paint::width, Paint::height);
+        VECTOR3 screenhead = Math::WorldToScreen(head, &vm, Paint::width, Paint::height);               // get player cooardinates
+        int height_f = screenpos.y - screenhead.y;
+        int width_f = height_f / 2;
+
+        // = = = = = = = = = = = = = = = = = = =[   Draw on screen  ]= = = = = = = = = = = = = = = =
+
+        if(screenpos.z >= 0.01f){
+            if(boxes_enabled){
+                if(boxes_by_health_enabled){
+                    Paint::BorderBoxOutlined(screenhead.x - width_f / 2,screenhead.y,width_f,height_f,2,255,(int)(255 - (e.health * 2.55f)),(int)(e.health * 2.55f),0, 255, 0 ,1, 0); // 100 100 100 255
+                } else {
+                    Paint::BorderBoxOutlined(screenhead.x - width_f / 2,screenhead.y,width_f,height_f,2, espBoxColor);
+                }
+            }
+            if(snapl_enabled)
+                Paint::Line(Paint::width / 2,Paint::height - 1,screenhead.x, screenhead.y + height_f, snaplineColor, 1);    // draw snaplines
+
+            if(weapon_health_enabled){
+                int weaponId = Memory.readMem<int>(ci.entity + m_hActiveWeapon);
+                int weaponEnt = Memory.readMem<int>(gameModule + dwEntityList + ((weaponId & 0xFFF) - 1) * 0x10);
+                if(weaponEnt != NULL){
+                    int entityWeapon = Memory.readMem<int>(weaponEnt + m_iItemDefinitionIndex);
+                    char str[64];
+                    snprintf(str, 64, "%dhp", e.health);
+
+                    Paint::StringOutlined((char*)player.name,screenhead.x - width_f / 2,screenhead.y - 15,255,0,1,0, 255, 255, 255 ,255);
+                    Paint::StringOutlined((char*)Functions::getActiveWeapon(entityWeapon),screenhead.x - width_f / 2,screenhead.y + height_f + 5,255,0,1,0,255,255,255,255);
+                    Paint::StringOutlined(str, screenhead.x - width_f / 2,screenhead.y + height_f + 15,255,0,1,0,255,255,255,255);
+                }
+                if(Functions::checkIfScoped(ci.entity))
+                    Paint::StringOutlined((char*)"Scoped",screenhead.x - width_f / 2,screenhead.y - 30,255,0,1,0, 255, 65 ,255, 0);
+            }
+        }
+    }
 }

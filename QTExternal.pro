@@ -28,6 +28,7 @@ HEADERS += \
     Visuals.h \
     aimbot.h \
     csmath.h \
+    entity.h \
     esp.h \
     fakelag.h \
     offsets.hpp \
