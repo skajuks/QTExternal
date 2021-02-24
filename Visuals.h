@@ -1,3 +1,4 @@
+#pragma once
 
 #include <windows.h>
 
@@ -19,6 +20,6 @@ public:
     static void setBrightness();
     static void ProcessEntityEnemy(const ClientInfo& ci, const Entity& e, uintptr_t glowObject);
     static void ProcessEntityTeam(const ClientInfo& ci, uintptr_t glowObject);
-    static void ProcessD3D9Render(const ClientInfo& ci, const Entity& e);
+    static void ProcessD3D9Render(const ClientInfo& ci, const Entity& e, int index);
 };
 

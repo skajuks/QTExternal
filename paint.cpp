@@ -9,9 +9,16 @@
 using namespace hazedumper::netvars;
 using namespace hazedumper::signatures;
 
-IDirect3D9Ex* d3dObject = NULL;
-IDirect3DDevice9Ex* d3dDevice = NULL;
-ID3DXFont* d3dFont = 0;
+IDirect3D9Ex* Paint::d3dObject = NULL;
+IDirect3DDevice9Ex* Paint::d3dDevice = NULL;
+ID3DXFont* Paint::d3dFont = 0;
+D3DPRESENT_PARAMETERS Paint::d3dparams; //parameters for creating device
+HWND Paint::targetWnd;
+int Paint::width;
+int Paint::height;
+
+extern ClientInfo ci[64];  // ci[0] = localplayer
+extern Entity e[64];   // ci[0] = localplayer
 
 int Paint::d3D9Init(HWND hWnd){
 
@@ -70,18 +77,16 @@ int Paint::render()
     d3dDevice->Clear(0, 0, D3DCLEAR_TARGET, 0, 1.0f, 0);
     d3dDevice->BeginScene();
 
-    // =-=-=-=-=-=-=-=-=--=-=-=-=[ Attention ]=-=-=-=-=-=-=-=-=-=-
-    //                  BAD CODE ALERT!! YOU HAVE BEED WARNED
-
-    // this whole chunk of code should be integrated with glowesp, so it only loops trough entitylist once
-    // same thing could also apply to aimbot entity loop, to save cpu usage
-    // should also center out entity name and weapon used
-    // esp color to health <-- add
-    // redo this thing using structs to minimize rpm/wpm calls
-    // create a damn stuct for colors
-
     if (targetWnd == GetForegroundWindow()){
-        //Glow::ProcessD3D9Render(ci, e);
+        int entityIndex = 1;
+        do {
+           if(entityIndex >= 64)
+               break;      // checks only player entities [max = 64]
+           if(e[entityIndex].health > 0 && e[entityIndex].team != e[0].team){
+               Glow::ProcessD3D9Render(ci[entityIndex], e[entityIndex], entityIndex);
+           }
+        } while(ci[entityIndex++].nextEntity);
+
         StringOutlined((char*)watermark.c_str(),5,30,255,0,1,0, 255, 255, 255 ,255);   // watermark
         Sleep(1);
     }

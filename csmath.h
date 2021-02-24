@@ -68,7 +68,7 @@ public:
 };
 
 // forward declare Entity
-class Entity;
+struct Entity;
 
 class Math
 {

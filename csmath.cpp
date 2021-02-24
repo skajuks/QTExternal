@@ -24,8 +24,6 @@ bool Math::checkForVelocity(const Entity& local_entity)
 
 VECTOR3 Math::WorldToScreen(const VECTOR3 pos, view_matrix_t* matrix, int width, int height) {
 
-    // this shit should be moved to math cpp
-
     VECTOR3 out;
     float _x = matrix->matrix[0] * pos.x + matrix->matrix[1] * pos.y + matrix->matrix[2] * pos.z + matrix->matrix[3];
     float _y = matrix->matrix[4] * pos.x + matrix->matrix[5] * pos.y + matrix->matrix[6] * pos.z + matrix->matrix[7];
@@ -104,7 +102,7 @@ VECTOR3 Math::PlayerPos(uintptr_t entity){
 VECTOR3 Math::getBoneMatrix(uintptr_t entity, int bone) {
     uintptr_t bones = Memory.readMem<uintptr_t>(entity + m_dwBoneMatrix);
     VECTOR3 boneMatrix;
-    boneMatrix.x = Memory.readMem<float>(bones + 0x30 * bone + 0xC);
+    boneMatrix.x = Memory.readMem<float>(bones + 0x30 * bone + 0xC);    // struct plzzzz
     boneMatrix.y = Memory.readMem<float>(bones + 0x30 * bone + 0x1C);
     boneMatrix.z = Memory.readMem<float>(bones + 0x30 * bone + 0x2C);
     return boneMatrix;

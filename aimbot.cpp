@@ -126,10 +126,7 @@ ClientInfo* Aim::getClosestTeammate(Entity* localPlayer, ClientInfo* pEntity){
     return NULL;
 }
 
-VECTOR2 Aim::getClosestEntity(const Entity &Entity_local, const ClientInfo &ci, const ClientInfo &local_ci){
-
-    VECTOR3 recoil = Memory.readMem<VECTOR3>(local_ci.entity + m_aimPunchAngle);   // gets recoil vector and counteracts it
-    recoil *= (recoil_perc / 90.f) * 2.f;
+VECTOR2 Aim::getClosestEntity(const Entity &Entity_local, const ClientInfo &ci){
 
     VECTOR3 vecOrigin = Entity_local.vecOrigin;
     VECTOR3 entBone = Math::getBoneMatrix(ci.entity, bone_int);
@@ -141,70 +138,35 @@ VECTOR2 Aim::getClosestEntity(const Entity &Entity_local, const ClientInfo &ci, 
     return Math::CalcDistance(pAngle.x, pAngle.y, angleTo.x, angleTo.y);
 }
 
+void Aim::executeAimbot(const ClientInfo &target, const Entity &Entity_local, const ClientInfo &local_ci){
 
-void Aim::getClosestEnemyByAngle(Entity* Entity,ClientInfo* pEntity){               //redo this function, doesnt need while loop and toggle check
-    if(aimbot_toggle){
-        int entityIndex = 1;    // skips localplayer
+    int entityWeapon;
 
-        float oldDistancex = std::numeric_limits<float>::max();;
-        float oldDistancey = std::numeric_limits<float>::max();;
-        int entityWeapon;
-        ClientInfo* target;
+    VECTOR3 recoil = Memory.readMem<VECTOR3>(local_ci.entity + m_aimPunchAngle);   // gets recoil vector and counteracts it
+    recoil *= (recoil_perc / 90.f) * 2.f;
 
-        VECTOR3 entBone;
-        VECTOR3 pAngle;
-        VECTOR3 recoil;
+    int weaponEnt = Memory.readMem<int>(gameModule + dwEntityList + ((Memory.readMem<int>(local_ci.entity + m_hActiveWeapon) & 0xFFF) - 1) * 0x10);
+    if(weaponEnt){
+        entityWeapon = Memory.readMem<int>(weaponEnt + m_iItemDefinitionIndex);     // gets weapon entity ID, currently returns 0 [ recheck ]
+    }
+    VECTOR3 vecOrigin = Entity_local.vecOrigin;
+    VECTOR3 pAngle = Math::PlayerAngles();
+    pAngle.z = Entity_local.vecViewOffset.z;    // pAngle.z = Memory.readMem<float>(localPlayer + m_vecViewOffset + 0x8);
+    vecOrigin.z += pAngle.z;
 
-        VECTOR3 targetBones;
-        VECTOR3 old_recoil{0.f, 0.f, 0.f};
+    VECTOR3 AimAngle = Math::CalcAngle(vecOrigin, Math::getBoneMatrix(target.entity, 8));
+    AimAngle = Math::Smooth(smooth, pAngle, AimAngle - recoil);
+    Math::normalizeAngles(&AimAngle.x , &AimAngle.y);
+    VECTOR2 readyAngles = {AimAngle.x, AimAngle.y};
 
-        do{
-            if(entityIndex >= 64)
-                break;
-
-            if(Entity[entityIndex].health && pEntity[entityIndex].entity && Entity[entityIndex].team != Entity[0].team){
-
-                recoil = Memory.readMem<VECTOR3>(pEntity[0].entity + m_aimPunchAngle);   // gets recoil vector and counteracts it
-                recoil *= (recoil_perc / 90.f) * 2.f;
-
-                int weaponEnt = Memory.readMem<int>(gameModule + dwEntityList + ((Memory.readMem<int>(pEntity[0].entity + m_hActiveWeapon) & 0xFFF) - 1) * 0x10);
-                if(weaponEnt){
-                    entityWeapon = Memory.readMem<int>(weaponEnt + m_iItemDefinitionIndex);     // gets weapon entity ID, currently returns 0 [ recheck ]
-                }
-
-                entBone = Math::getBoneMatrix(pEntity->entity, bone_int);
-                pAngle = Math::PlayerAngles();
-                pAngle.z = Entity[0].vecViewOffset.z;    // pAngle.z = Memory.readMem<float>(localPlayer + m_vecViewOffset + 0x8);
-                Entity[0].vecOrigin.z += pAngle.z;
-
-                VECTOR3 angleTo = Math::CalcAngle(Entity[0].vecOrigin, entBone);
-                auto newDistance = Math::CalcDistance(pAngle.x, pAngle.y, angleTo.x, angleTo.y);
-                if(newDistance.x < oldDistancex && newDistance.y < oldDistancey && newDistance.x <= aimfov && newDistance.y <= aimfov){
-                    oldDistancex = newDistance.x;
-                    oldDistancey = newDistance.y;
-                    targetBones = entBone;
-                    target = pEntity;
-                }
-
-            entityIndex++;
-
-            }
-        } while(pEntity->nextEntity);
-
-        if(target != NULL){
-            VECTOR3 AimAngle = Math::CalcAngle(Entity[0].vecOrigin, targetBones);
-            AimAngle = Math::Smooth(smooth, pAngle, AimAngle - recoil);
-            Math::normalizeAngles(&AimAngle.x , &AimAngle.y);
-            VECTOR2 readyAngles = {AimAngle.x, AimAngle.y};
-            if(!in_array(noAimbotEntityArray, 11, entityWeapon)){
-                if(enable_silentaim)
-                    doSilentAim(readyAngles, true);
-                else
-                   Memory.writeMem<VECTOR2>(engineModulep + dwClientState_ViewAngles, readyAngles);
-            }
-        }
+    if(!in_array(noAimbotEntityArray, 11, entityWeapon)){
+        if(enable_silentaim)
+            doSilentAim(readyAngles, true);
+        else
+           Memory.writeMem<VECTOR2>(engineModulep + dwClientState_ViewAngles, readyAngles);
     }
 }
+
 
 
 

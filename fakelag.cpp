@@ -17,7 +17,7 @@ void FakeLag::setFakelag(int delay){
 
 void FakeLag::fakeLag(){
     while(true){
-        if (GetKeyState(VK_HOME) & 1){ // check if fakelag is enabled
+        /*if (GetKeyState(VK_HOME) & 1){ // check if fakelag is enabled
             localPlayer = Functions::getLocalPlayer();
             shots_fired = Memory.readMem<int>(localPlayer + m_iShotsFired);
             if (shots_fired > 0){  // set a check if player is shooting a gun
@@ -27,6 +27,6 @@ void FakeLag::fakeLag(){
                 std::this_thread::sleep_for(std::chrono::milliseconds(3));
 
            }
-        }
+        }*/
     }
 }

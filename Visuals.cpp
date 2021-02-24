@@ -3,8 +3,7 @@
 #include "offsets.hpp"
 #include "NetVars.hpp"
 #include "paint.h"
-
-class Glow;
+#include "Visuals.h"
 
 using namespace hazedumper::netvars;
 using namespace hazedumper::signatures;
@@ -160,13 +159,14 @@ void Glow::ProcessEntityEnemy(const ClientInfo& ci, const Entity& e, uintptr_t g
     Memory.writeMemFrom<Chams>(ci.entity + m_clrRender, &clr_enemy);
 }
 
-void Glow::ProcessD3D9Render(const ClientInfo& ci, const Entity& e){
+void Glow::ProcessD3D9Render(const ClientInfo& ci, const Entity& e, int index){
     if(master_esp_toggle){
+
         player_info player;
         uintptr_t clientState = Functions::getClientState();
         uintptr_t uinfoTable = Memory.readMem<uintptr_t>(clientState + dwClientState_PlayerInfo);
         uintptr_t items = Memory.readMem<std::uintptr_t>(Memory.readMem<uintptr_t>(uinfoTable + 0x40) + 0xC);
-        Memory.readMemTo<player_info>(Memory.readMem<uintptr_t>((items + 0x28) + (ci.entity * 0x34)), &player);   // read player struct
+        Memory.readMemTo<player_info>(Memory.readMem<uintptr_t>((items + 0x28) + (index * 0x34)), &player);   // read player struct
 
         view_matrix_t vm;
         Memory.readMemTo<view_matrix_t>(gameModule + dwViewMatrix, &vm);    // read player viewmatrix

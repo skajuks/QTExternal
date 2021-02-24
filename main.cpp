@@ -3,7 +3,6 @@
 #include <iostream>
 #include <limits>
 #include <cstddef>
-//#include "Visuals.h"
 #include "Functions.h"
 #include "aimbot.h"
 #include <QApplication>
@@ -15,12 +14,20 @@
 #include "fakelag.h"
 #include "offsets.hpp"
 #include "Structs.h"
-
 #include "entity.h"
-
+#include "esp.h"
 
 #include "widget.h"
 #include "ui_widget.h"
+
+#undef max // C macro for max variable from math.h - have to undef because class::max() would paste macro content at "max" (class:((a)>(b)?(a):(b)))
+#define LEFT_MOUSE_BUTTON 0x01
+
+
+
+
+ClientInfo ci[64];  // ci[0] = localplayer
+Entity e[64];       // ci[0] = localplayer
 
 bool  toggleHealthGlow  = false;
 bool  ToggleNoFlash     = false;
@@ -32,15 +39,18 @@ float aimbot_recoil     =   1.f;
 float glow_alpha        =   1.f;
 int   flashAmount       =     0;
 float nightmode_amount  = 0.04f;
-int   aimbot_on_key     =  0x01;                            // mouse 1 default
+int   aimbot_on_key     =  LEFT_MOUSE_BUTTON;                            // mouse 1 default
 bool  enable_silent     = false;
 
-int aimfov = 20;
+extern int aimfov;
 
 using namespace hazedumper::netvars;
 using namespace hazedumper::signatures;
 
 class Glow;
+
+
+
 
 int main(int argc, char** argv) {
     auto app = new QApplication(argc, argv);
@@ -60,21 +70,25 @@ int main(int argc, char** argv) {
         Glow::setBrightness();
         //Misc::setNightmodeAmount(0.09f);
 
+        //std::thread()
+
         while(1 < 2) {
             int entityIndex = 0;
 
-            float oldx = std::numeric_limits<float>::max();;
-            float oldy = std::numeric_limits<float>::max();;
-            ClientInfo target;
+            float oldx = std::numeric_limits<float>::max();
+            float oldy = std::numeric_limits<float>::max();
+            int targetIndex = 0;
 
             do {
-                Memory.readMemTo<ClientInfo>(gameModule + dwEntityList * 0x10, &ci[entityIndex++]);
+                Memory.readMemTo<ClientInfo>(gameModule + dwEntityList + entityIndex * 0x10, &ci[entityIndex]);
                 Memory.readMemTo<Entity>(ci[entityIndex].entity, &e[entityIndex]);
 
                 if(entityIndex >= 64)
                     break;      // checks only player entities [max = 64]
+                if(entityIndex == 0)
+                    continue;
 
-                if(e[entityIndex].health && ci[entityIndex].entity) { // checks if entity not NULL and is alive
+                if(e[entityIndex].health && ci[entityIndex].entity && entityIndex != 0) { // checks if entity not NULL and is alive and skips localplayer
 
                     Misc::setBhop(e[0]);
                     Misc::setNoFlash(ci[0]);
@@ -84,26 +98,29 @@ int main(int argc, char** argv) {
                     }
                     else {
                         Glow::ProcessEntityEnemy(ci[entityIndex], e[entityIndex], glowObjectManager);
-
-                        VECTOR2 newDistance = Aim::getClosestEntity(e[0], ci[entityIndex]);
-                        if(newDistance.x < oldx && newDistance.y < oldy && newDistance.x <= aimfov && newDistance.y <= aimfov){
-                            oldx = newDistance.x;
-                            oldy = newDistance.y;
-                            target = ci[entityIndex];   // execute code only if aimbot is actually enabled
+                        if(toggleAimbot){
+                            VECTOR2 newDistance = Aim::getClosestEntity(e[0], ci[entityIndex]);
+                            if(newDistance.x < oldx && newDistance.y < oldy && newDistance.x <= aimfov && newDistance.y <= aimfov){
+                                oldx = newDistance.x;
+                                oldy = newDistance.y;
+                                targetIndex = entityIndex;   // execute code only if aimbot is actually enabled
+                            }
                         }
                     }
                 }
-            } while(ci[entityIndex].nextEntity);
+            } while(ci[entityIndex++].nextEntity);  //
 
-            //Aim::getClosestEnemyByAngle(e, ci);     // this needs to be outside the loop because all entities are required
+            window->ui->ent->setText(QString::number(targetIndex));
 
-            if(target.entity){
-                Aim::executeAimbot(target, e[0], ci[0]);        // execute code only if aimbot is actually enabled
+            if(ci[targetIndex].entity != NULL && targetIndex != 0 && GetAsyncKeyState(LEFT_MOUSE_BUTTON) && toggleAimbot){
+                Aim::executeAimbot(ci[targetIndex], e[0], ci[0]);        // execute code only if aimbot is actually enabled
             }
-            //std::cout << "Entity count: " << entityIndex << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(2));
+            //std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            Sleep(1);
         }
     }).detach();
+
+    std::thread(ESP::run).detach();
 
     return app->exec();
 }

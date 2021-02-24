@@ -11,6 +11,7 @@ public:
     static void setSmoothOnSlider(float value);
     static void setRecoilControlPerc(float value);
     static void toggleSilentAim(bool state);
-    static VECTOR2 getClosestEntity(const Entity &Entity_local, const ClientInfo &ci, const ClientInfo &local_ci);
+    static VECTOR2 getClosestEntity(const Entity &Entity_local, const ClientInfo &ci);
+    static void executeAimbot(const ClientInfo &target, const Entity &Entity_local, const ClientInfo &local_ci);
 };
 
