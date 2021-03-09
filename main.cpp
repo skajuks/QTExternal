@@ -23,11 +23,8 @@
 #undef max // C macro for max variable from math.h - have to undef because class::max() would paste macro content at "max" (class:((a)>(b)?(a):(b)))
 #define LEFT_MOUSE_BUTTON 0x01
 
-
-
-
 ClientInfo ci[64];  // ci[0] = localplayer
-Entity e[64];       // ci[0] = localplayer
+Entity e[64];       // e[0] = localplayer
 
 bool  toggleHealthGlow  = false;
 bool  ToggleNoFlash     = false;
@@ -73,32 +70,34 @@ int main(int argc, char** argv) {
         //std::thread()
 
         while(1 < 2) {
-            int entityIndex = 0;
-
+            int entityIndex = 1;
             float oldx = std::numeric_limits<float>::max();
             float oldy = std::numeric_limits<float>::max();
             int targetIndex = 0;
+            int aliveEntity = 0;
+
+            // Under here goes everything that needs to be updated for every entity except local player
+
+            Memory.readMemTo<ClientInfo>(gameModule + dwLocalPlayer, &ci[0]);
+            Memory.readMemTo<Entity>(ci[0].entity, &e[0]);
 
             do {
+
                 Memory.readMemTo<ClientInfo>(gameModule + dwEntityList + entityIndex * 0x10, &ci[entityIndex]);
                 Memory.readMemTo<Entity>(ci[entityIndex].entity, &e[entityIndex]);
 
-                if(entityIndex >= 64)
-                    break;      // checks only player entities [max = 64]
-                if(entityIndex == 0)
-                    continue;
+                if(entityIndex >= 64) break;
 
-                if(e[entityIndex].health && ci[entityIndex].entity && entityIndex != 0) { // checks if entity not NULL and is alive and skips localplayer
+                if(e[entityIndex].health > 0 && ci[entityIndex].entity) { // checks if entity exists and is alive
 
-                    Misc::setBhop(e[0]);
-                    Misc::setNoFlash(ci[0]);
+                    aliveEntity++;
 
                     if(e[entityIndex].team == e[0].team){
                         Glow::ProcessEntityTeam(ci[entityIndex], glowObjectManager);
                     }
                     else {
                         Glow::ProcessEntityEnemy(ci[entityIndex], e[entityIndex], glowObjectManager);
-                        if(toggleAimbot){
+                        if(!toggleAimbot){
                             VECTOR2 newDistance = Aim::getClosestEntity(e[0], ci[entityIndex]);
                             if(newDistance.x < oldx && newDistance.y < oldy && newDistance.x <= aimfov && newDistance.y <= aimfov){
                                 oldx = newDistance.x;
@@ -108,11 +107,17 @@ int main(int argc, char** argv) {
                         }
                     }
                 }
-            } while(ci[entityIndex++].nextEntity);  //
+            } while(ci[entityIndex++].nextEntity);
 
-            window->ui->ent->setText(QString::number(targetIndex));
+            // Under here goes everything that needs to be updated for local player only!
 
-            if(ci[targetIndex].entity != NULL && targetIndex != 0 && GetAsyncKeyState(LEFT_MOUSE_BUTTON) && toggleAimbot){
+            Misc::setBhop(e[0]);
+            Misc::setNoFlash(ci[0]);
+
+            window->ui->TEST->setText(QString::number(e[0].health));
+            window->ui->CURRENT_ENT->setText(QString::number(aliveEntity)); //QString::number(aliveEntity)
+
+            if(GetAsyncKeyState(LEFT_MOUSE_BUTTON) && !toggleAimbot){
                 Aim::executeAimbot(ci[targetIndex], e[0], ci[0]);        // execute code only if aimbot is actually enabled
             }
             //std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -120,7 +125,7 @@ int main(int argc, char** argv) {
         }
     }).detach();
 
-    std::thread(ESP::run).detach();
+    //std::thread(ESP::run).detach();
 
     return app->exec();
 }
