@@ -75,6 +75,8 @@ private slots:
 
     void on_esp_snapline_color_stateChanged(int arg1);
 
+    void on_jump_shot_enable_stateChanged(int arg1);
+
 private:
 
 };

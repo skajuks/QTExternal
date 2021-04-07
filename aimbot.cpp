@@ -21,8 +21,6 @@
 using namespace hazedumper::signatures;
 using namespace hazedumper::netvars;
 
-bool aimbot_toggle = false;
-int aimKey = 0x01;
 int bone_int = 8;
 int aimfov = 20;
 float smooth = 1.f;
@@ -33,8 +31,7 @@ char* pistols[] ={0,0,0,0,0};   // add for every gun
 
 // ui fucntions
 
-void Aim::toggleAimbotOnKey(bool state){
-    aimbot_toggle = state;
+void Aim::enableJumpShot(){
 }
 
 void Aim::setFOVonSlider(int value){
@@ -52,7 +49,6 @@ void Aim::setRecoilControlPerc(float value){
 void Aim::toggleSilentAim(bool state){
     enable_silentaim = state;
 }
-
 
 void doSilentAim(VECTOR2 angles, bool CanShoot){
     CInput Input;
@@ -129,18 +125,22 @@ ClientInfo* Aim::getClosestTeammate(Entity* localPlayer, ClientInfo* pEntity){
 VECTOR2 Aim::getClosestEntity(const Entity &Entity_local, const ClientInfo &ci){
 
     VECTOR3 vecOrigin = Entity_local.vecOrigin;
+    //printf("VEC_ORIGIN = %f %f %f\n", vecOrigin.x ,vecOrigin.y, vecOrigin.z);
     VECTOR3 entBone = Math::getBoneMatrix(ci.entity, bone_int);
+    //printf("ENT_BONE = %f %f %f\n", entBone.x ,entBone.y, entBone.z);
     VECTOR3 pAngle = Math::PlayerAngles();
     pAngle.z = Entity_local.vecViewOffset.z;    // pAngle.z = Memory.readMem<float>(localPlayer + m_vecViewOffset + 0x8);
     vecOrigin.z += pAngle.z;
 
-    VECTOR3 angleTo = Math::CalcAngle(Entity_local.vecOrigin, entBone);
-    return Math::CalcDistance(pAngle.x, pAngle.y, angleTo.x, angleTo.y);
+    VECTOR3 angleTo = Math::CalcAngle(vecOrigin, entBone);
+    VECTOR2 finalAngle = Math::CalcDistance(pAngle.x, pAngle.y, angleTo.x, angleTo.y);
+    //printf("FINAL_ANGLE = %f %f\n", finalAngle.x ,finalAngle.y);
+    return finalAngle;
 }
 
-void Aim::executeAimbot(const ClientInfo &target, const Entity &Entity_local, const ClientInfo &local_ci){
-
+aimbotVariables Aim::executeAimbot(const ClientInfo &target, const Entity &Entity_local, const ClientInfo &local_ci){
     int entityWeapon;
+    aimbotVariables variables;
 
     VECTOR3 recoil = Memory.readMem<VECTOR3>(local_ci.entity + m_aimPunchAngle);   // gets recoil vector and counteracts it
     recoil *= (recoil_perc / 90.f) * 2.f;
@@ -160,11 +160,16 @@ void Aim::executeAimbot(const ClientInfo &target, const Entity &Entity_local, co
     VECTOR2 readyAngles = {AimAngle.x, AimAngle.y};
 
     if(!in_array(noAimbotEntityArray, 11, entityWeapon)){
-        if(enable_silentaim)
-            doSilentAim(readyAngles, true);
-        else
-           Memory.writeMem<VECTOR2>(engineModulep + dwClientState_ViewAngles, readyAngles);
+            if(enable_silentaim)
+                doSilentAim(readyAngles, true);
+            else
+               Memory.writeMem<VECTOR2>(engineModulep + dwClientState_ViewAngles, readyAngles);
+
     }
+    variables.entityWeapon = entityWeapon;
+    variables.AimAngle = AimAngle;
+    variables.recoil = recoil;
+    return variables;
 }
 
 

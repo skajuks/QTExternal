@@ -16,6 +16,9 @@
 #include "Structs.h"
 #include "entity.h"
 #include "esp.h"
+#include <QStyleFactory>
+#include "stylesheet.h"
+#include <QTimer>
 
 #include "widget.h"
 #include "ui_widget.h"
@@ -38,6 +41,7 @@ int   flashAmount       =     0;
 float nightmode_amount  = 0.04f;
 int   aimbot_on_key     =  LEFT_MOUSE_BUTTON;                            // mouse 1 default
 bool  enable_silent     = false;
+bool  jump_shot         = false;
 
 extern int aimfov;
 
@@ -46,84 +50,128 @@ using namespace hazedumper::signatures;
 
 class Glow;
 
-
-
-
 int main(int argc, char** argv) {
     auto app = new QApplication(argc, argv);
     auto window = new Widget;
+    DWORD aColors[2];
+    int elements[2] = {COLOR_WINDOW, COLOR_ACTIVECAPTION};
+    aColors[0] = RGB(0x80, 0xFF, 0x80);
+    aColors[1] = RGB(0x80, 0xFF, 0x80);
+
+    qApp->setStyle(QStyleFactory::create("Fusion"));
+    qApp->setStyleSheet(style_sheet);
+    SetSysColors(2, elements, aColors);
+
     window->show();
+
+    AllocConsole();
+    freopen("CONOUT$", "w", stdout);
 
     // add a sigscan here
 
     // add d3d9 thread here
 
-    std::thread([&](){
+    uintptr_t glowObjectManager = Memory.readMem<uintptr_t>(gameModule + dwGlowObjectManager);
 
-        uintptr_t glowObjectManager = Memory.readMem<uintptr_t>(gameModule + dwGlowObjectManager);
+    // here goes static features that doesn't need updates
 
-        // init static features that doesn't need updates
+    Glow::setBrightness();
+    //Misc::setNightmodeAmount(0.09f);
 
-        Glow::setBrightness();
-        //Misc::setNightmodeAmount(0.09f);
 
-        //std::thread()
+    QTimer *timer = new QTimer(window);
+    QObject::connect(timer, &QTimer::timeout, [&](){
 
-        while(1 < 2) {
-            int entityIndex = 1;
-            float oldx = std::numeric_limits<float>::max();
-            float oldy = std::numeric_limits<float>::max();
-            int targetIndex = 0;
-            int aliveEntity = 0;
+        //printf("toggleAimbot = %d\n", toggleAimbot);
 
-            // Under here goes everything that needs to be updated for every entity except local player
+        int entityIndex = 1;
+        float oldx = std::numeric_limits<float>::max();
+        float oldy = std::numeric_limits<float>::max();
+        int targetIndex = NULL;
+        int aliveEntity = 0;
+        aimbotVariables variables;
 
-            Memory.readMemTo<ClientInfo>(gameModule + dwLocalPlayer, &ci[0]);
-            Memory.readMemTo<Entity>(ci[0].entity, &e[0]);
+        // Under here goes everything that needs to be updated for every entity except local player
 
-            do {
+        Memory.readMemTo<ClientInfo>(gameModule + dwLocalPlayer, &ci[0]);
+        Memory.readMemTo<Entity>(ci[0].entity, &e[0]);
 
-                Memory.readMemTo<ClientInfo>(gameModule + dwEntityList + entityIndex * 0x10, &ci[entityIndex]);
-                Memory.readMemTo<Entity>(ci[entityIndex].entity, &e[entityIndex]);
+        do {
 
-                if(entityIndex >= 64) break;
+            if(entityIndex >= 64) break;
 
-                if(e[entityIndex].health > 0 && ci[entityIndex].entity) { // checks if entity exists and is alive
+            Memory.readMemTo<ClientInfo>(gameModule + dwEntityList + entityIndex * 0x10, &ci[entityIndex]);
+            Memory.readMemTo<Entity>(ci[entityIndex].entity, &e[entityIndex]);
 
-                    aliveEntity++;
+            if(e[entityIndex].health > 0 && ci[entityIndex].entity) { // checks if entity exists and is alive
 
-                    if(e[entityIndex].team == e[0].team){
-                        Glow::ProcessEntityTeam(ci[entityIndex], glowObjectManager);
-                    }
-                    else {
-                        Glow::ProcessEntityEnemy(ci[entityIndex], e[entityIndex], glowObjectManager);
-                        if(!toggleAimbot){
-                            VECTOR2 newDistance = Aim::getClosestEntity(e[0], ci[entityIndex]);
-                            if(newDistance.x < oldx && newDistance.y < oldy && newDistance.x <= aimfov && newDistance.y <= aimfov){
-                                oldx = newDistance.x;
-                                oldy = newDistance.y;
-                                targetIndex = entityIndex;   // execute code only if aimbot is actually enabled
-                            }
-                        }
-                    }
+                aliveEntity++;
+
+                if(e[entityIndex].team == e[0].team){
+                    Glow::ProcessEntityTeam(ci[entityIndex], glowObjectManager);
                 }
-            } while(ci[entityIndex++].nextEntity);
-
-            // Under here goes everything that needs to be updated for local player only!
-
-            Misc::setBhop(e[0]);
-            Misc::setNoFlash(ci[0]);
-
-            window->ui->TEST->setText(QString::number(e[0].health));
-            window->ui->CURRENT_ENT->setText(QString::number(aliveEntity)); //QString::number(aliveEntity)
-
-            if(GetAsyncKeyState(LEFT_MOUSE_BUTTON) && !toggleAimbot){
-                Aim::executeAimbot(ci[targetIndex], e[0], ci[0]);        // execute code only if aimbot is actually enabled
+                else {
+                    Glow::ProcessEntityEnemy(ci[entityIndex], e[entityIndex], glowObjectManager);
+                    //if(!toggleAimbot){
+                        VECTOR2 newDistance = Aim::getClosestEntity(e[0], ci[entityIndex]);
+                        if(newDistance.x < oldx && newDistance.y < oldy && newDistance.x <= aimfov && newDistance.y <= aimfov){
+                            oldx = newDistance.x;
+                            oldy = newDistance.y;
+                            targetIndex = entityIndex;   // execute code only if aimbot is actually enabled
+                        }
+                    //}
+                }
             }
-            //std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            Sleep(1);
+        } while(ci[entityIndex++].nextEntity);
+
+        // Update glow for target entity
+
+        Glow::ProcessTargetEntity(ci[targetIndex], glowObjectManager);
+
+        // Under here goes everything that needs to be updated for local player only!
+
+        Misc::setBhop(e[0]);
+        Misc::setNoFlash(ci[0]);
+        INPUT inp[1] = {0};
+        if(GetAsyncKeyState(0x56) && toggleAimbot && targetIndex && jump_shot) {
+            if(e[0].vecVelocity.z < 15 && e[0].vecVelocity.z > 0){
+                inp[0].type = INPUT_MOUSE;
+                inp[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+                SendInput(1, inp, sizeof(INPUT));
+            }
         }
-    }).detach();
+        if(GetAsyncKeyState(LEFT_MOUSE_BUTTON) && toggleAimbot && targetIndex) {
+            if(jump_shot && e[0].vecVelocity.z < 15 && e[0].vecVelocity.z > 0){
+                inp[0].type = INPUT_MOUSE;
+                inp[0].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+                SendInput(1, inp, sizeof(INPUT));
+            }
+            variables = Aim::executeAimbot(ci[targetIndex], e[0], ci[0]);        // execute code only if aimbot is actually enabled
+            window->ui->aimbot_state_ui->setText(QString("AIMBOT ACTIVE"));
+            window->ui->aimbot_state_ui->setStyleSheet(QString("QLabel{color: rgba(0,255,0,255)}"));
+        } else {
+            window->ui->aimbot_state_ui->setText(QString("AIMBOT ON STANDBY"));
+            window->ui->aimbot_state_ui->setStyleSheet(QString("QLabel{color: rgba(255,255,0,255)}"));
+        }
+
+        // debug section
+        float velocity = e[0].vecVelocity.z;
+        window->ui->loc_player_vel->setText(QString::number(velocity));
+        velocity > 0 ? window->ui->loc_player_vel->setStyleSheet(QString("QLabel{color: rgba(0,255,0,255)}")) : window->ui->loc_player_vel->setStyleSheet(QString("QLabel{color: rgba(255,255,0,255)}"));
+        window->ui->curr_ent_cnt_val->setText(QString::number(aliveEntity));
+        window->ui->loc_p_ent_num->setText(QString::number(ci[0].entity));
+        window->ui->curr_tgt->setText(QString::number(targetIndex));
+        window->ui->dist_x->setText(QString::number(oldx));
+        window->ui->dist_y->setText(QString::number(oldy));
+        window->ui->ent_recoil->setText(QString(QString::number(variables.recoil.x) + " : " + QString::number(variables.recoil.y) + " : " +
+                                                QString::number(variables.recoil.z)));
+
+        window->ui->ent_weapon->setText(QString::number(variables.entityWeapon));
+        window->ui->ent_angles->setText(QString(QString::number(variables.AimAngle.x) + " : " + QString::number(variables.AimAngle.y) + " : " +
+                                                QString::number(variables.AimAngle.z)));
+
+    });
+    timer->start(1);
 
     //std::thread(ESP::run).detach();
 
@@ -140,6 +188,11 @@ Widget::Widget(QWidget *parent)
 Widget::~Widget()
 {
     delete ui;
+}
+
+void Widget::on_jump_shot_enable_stateChanged(int arg1)
+{
+    jump_shot = !jump_shot;
 }
 
 void Widget::on_esp_snapline_color_stateChanged(int arg1)
@@ -274,11 +327,7 @@ void Widget::on_noflash_enable_stateChanged(int arg1)
     Misc::setEnabledNoFlash(ToggleNoFlash);
 }
 
-void Widget::on_aim_enable_stateChanged(int arg1)
-{
-    toggleAimbot = !toggleAimbot;
-    Aim::toggleAimbotOnKey(toggleAimbot);
-}
+void Widget::on_aim_enable_stateChanged(int arg1) { toggleAimbot = !toggleAimbot; }
 
 void Widget::on_horizontalSlider_valueChanged(int value)
 {

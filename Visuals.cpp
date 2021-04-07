@@ -1,9 +1,9 @@
-
+#include "Visuals.h"
 #include "Functions.h"
 #include "offsets.hpp"
 #include "NetVars.hpp"
+#include "Structs.h"
 #include "paint.h"
-#include "Visuals.h"
 
 using namespace hazedumper::netvars;
 using namespace hazedumper::signatures;
@@ -11,7 +11,7 @@ using namespace hazedumper::signatures;
 Chams clr_team = {255,255,0};
 Chams clr_enemy = {0,255,255};
 
-//Paint Paint();
+Paint Paint();
 
 bool glow_enabled = false;
 bool enableHealthGlow = true;
@@ -29,13 +29,6 @@ BYTE TeamB = 0;
 BYTE ETeamR = 0;
 BYTE ETeamG = 0;
 BYTE ETeamB = 255;
-
-bool Glow::glowEnabled(){
-    if(glow_enabled)
-        return true;
-    else
-        return false;
-}
 
 // toggles
 bool master_esp_toggle = false;
@@ -64,6 +57,13 @@ void Glow::colorChanged(int funct, int a, int r, int g, int b){
     case 1: snaplineColor.a = a; snaplineColor.r = r; snaplineColor.g = g; snaplineColor.b = b;  // change snapline color
     case 2: espBoxColor.a = a; espBoxColor.r = r; espBoxColor.g = g; espBoxColor.b = b;          // change esp box color
     }
+}
+
+bool Glow::glowEnabled(){
+    if(glow_enabled)
+        return true;
+    else
+        return false;
 }
 
 void Glow::teamChamsStateChanged(int tChams[3]){
@@ -157,6 +157,19 @@ void Glow::ProcessEntityEnemy(const ClientInfo& ci, const Entity& e, uintptr_t g
     eGlow = setGlowColor(eGlow, e.health, ci.entity);
     Memory.writeMemFrom<GlowObject>(glowObject + (glowIndex * 0x38), &eGlow);
     Memory.writeMemFrom<Chams>(ci.entity + m_clrRender, &clr_enemy);
+}
+
+void Glow::ProcessTargetEntity(const ClientInfo& ci, uintptr_t glowObject) {
+    int glowIndex = Memory.readMem<int>(ci.entity + m_iGlowIndex);
+    GlowObject targetGlow;
+    Memory.readMemTo<GlowObject>(glowObject + (glowIndex * 0x38), &targetGlow);
+    targetGlow.red = 255;
+    targetGlow.green = 255;
+    targetGlow.blue = 0;
+    targetGlow.alpha = 255;
+    targetGlow.renderWhenOccluded = true;
+    targetGlow.renderWhenUnoccluded = false;
+    Memory.writeMemFrom<GlowObject>(glowObject + (glowIndex * 0x38), &targetGlow);
 }
 
 void Glow::ProcessD3D9Render(const ClientInfo& ci, const Entity& e, int index){

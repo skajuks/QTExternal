@@ -12,6 +12,7 @@ public:
     static void setRecoilControlPerc(float value);
     static void toggleSilentAim(bool state);
     static VECTOR2 getClosestEntity(const Entity &Entity_local, const ClientInfo &ci);
-    static void executeAimbot(const ClientInfo &target, const Entity &Entity_local, const ClientInfo &local_ci);
+    static aimbotVariables executeAimbot(const ClientInfo &target, const Entity &Entity_local, const ClientInfo &local_ci);
+    static void enableJumpShot();
 };
 

@@ -4,6 +4,12 @@
 #include "csmath.h"
 #include <stdint.h>
 
+struct aimbotVariables {
+    int entityWeapon;
+    VECTOR3 recoil;
+    VECTOR3 AimAngle;
+};
+
 struct CInput {
     BYTE __pad0x01[0xF1]; //we dont need these vars
     DWORD Commands;

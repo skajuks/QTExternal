@@ -33,6 +33,7 @@ HEADERS += \
     fakelag.h \
     offsets.hpp \
     paint.h \
+    stylesheet.h \
     widget.h
 
 FORMS += \
