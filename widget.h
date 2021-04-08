@@ -77,6 +77,8 @@ private slots:
 
     void on_jump_shot_enable_stateChanged(int arg1);
 
+    void on_toggle_aimbot_on_key_stateChanged(int arg1);
+
 private:
 
 };

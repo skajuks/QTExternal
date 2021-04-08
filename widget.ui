@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>371</width>
+    <width>696</width>
     <height>466</height>
    </rect>
   </property>
@@ -326,14 +326,14 @@
   <widget class="QLabel" name="cheatname">
    <property name="geometry">
     <rect>
-     <x>130</x>
+     <x>430</x>
      <y>0</y>
-     <width>131</width>
+     <width>181</width>
      <height>20</height>
     </rect>
    </property>
    <property name="text">
-    <string>build v2.0 QTExternal</string>
+    <string>build v2.0 QTExternal by chady</string>
    </property>
   </widget>
   <widget class="QTabWidget" name="tabWidget">
@@ -349,7 +349,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="Aimbot">
     <attribute name="title">
@@ -431,8 +431,8 @@
      <widget class="QLabel" name="label_3">
       <property name="geometry">
        <rect>
-        <x>80</x>
-        <y>100</y>
+        <x>10</x>
+        <y>320</y>
         <width>131</width>
         <height>16</height>
        </rect>
@@ -445,7 +445,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>130</y>
+        <y>340</y>
         <width>251</width>
         <height>41</height>
        </rect>
@@ -455,7 +455,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>220</y>
+        <y>164</y>
         <width>121</width>
         <height>19</height>
        </rect>
@@ -468,7 +468,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>180</y>
+        <y>124</y>
         <width>231</width>
         <height>19</height>
        </rect>
@@ -481,13 +481,13 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>200</y>
-        <width>231</width>
+        <y>144</y>
+        <width>251</width>
         <height>19</height>
        </rect>
       </property>
       <property name="text">
-       <string>Enable shooting at peak z velocity</string>
+       <string>Enable shooting at peak z velocity [ V ]</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_4">
@@ -538,7 +538,7 @@
      <widget class="QLabel" name="label_5">
       <property name="geometry">
        <rect>
-        <x>70</x>
+        <x>10</x>
         <y>250</y>
         <width>171</width>
         <height>16</height>
@@ -554,7 +554,7 @@
         <x>10</x>
         <y>270</y>
         <width>251</width>
-        <height>111</height>
+        <height>41</height>
        </rect>
       </property>
      </widget>
@@ -630,6 +630,19 @@
       </property>
       <property name="text">
        <string>1</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="toggle_aimbot_on_key">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>102</y>
+        <width>191</width>
+        <height>19</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Toggle aimbot on key [ C ]</string>
       </property>
      </widget>
     </widget>
@@ -1304,272 +1317,272 @@
     <attribute name="title">
      <string>  Debug  </string>
     </attribute>
-    <widget class="QFrame" name="frame">
-     <property name="geometry">
-      <rect>
-       <x>8</x>
-       <y>9</y>
-       <width>331</width>
-       <height>401</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">background-color: rgb(16, 16, 16);</string>
-     </property>
-     <property name="frameShape">
-      <enum>QFrame::Box</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
-     </property>
-     <widget class="QLabel" name="curr_ent_cnt">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>33</y>
-        <width>141</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Current entity count:</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="curr_ent_cnt_2">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>52</y>
-        <width>181</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Local player entity number:</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="curr_ent_cnt_val">
-      <property name="geometry">
-       <rect>
-        <x>220</x>
-        <y>30</y>
-        <width>91</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>-</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="loc_p_ent_num">
-      <property name="geometry">
-       <rect>
-        <x>220</x>
-        <y>50</y>
-        <width>91</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>-</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="curr_ent_cnt_3">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>72</y>
-        <width>181</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Current target entity number:</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="curr_tgt">
-      <property name="geometry">
-       <rect>
-        <x>220</x>
-        <y>70</y>
-        <width>91</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>-</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="curr_ent_cnt_4">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>92</y>
-        <width>191</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Current target entity distance x:</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="curr_ent_cnt_5">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>112</y>
-        <width>191</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Current target entity distance y:</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="dist_x">
-      <property name="geometry">
-       <rect>
-        <x>220</x>
-        <y>90</y>
-        <width>91</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>-</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="dist_y">
-      <property name="geometry">
-       <rect>
-        <x>220</x>
-        <y>110</y>
-        <width>91</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>-</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="aimbot_state_ui">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>10</y>
-        <width>141</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>AIMBOT ON STANDBY</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="curr_ent_cnt_6">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>132</y>
-        <width>51</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Recoil:</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="ent_recoil">
-      <property name="geometry">
-       <rect>
-        <x>80</x>
-        <y>130</y>
-        <width>241</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>-</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="curr_ent_cnt_7">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>152</y>
-        <width>81</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Weapon idx:</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="ent_weapon">
-      <property name="geometry">
-       <rect>
-        <x>100</x>
-        <y>150</y>
-        <width>221</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>-</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="curr_ent_cnt_8">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>172</y>
-        <width>51</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Angles:</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="ent_angles">
-      <property name="geometry">
-       <rect>
-        <x>70</x>
-        <y>170</y>
-        <width>251</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>-</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="curr_ent_cnt_9">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>192</y>
-        <width>121</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Local player velocity:</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="loc_player_vel">
-      <property name="geometry">
-       <rect>
-        <x>140</x>
-        <y>190</y>
-        <width>91</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>-</string>
-      </property>
-     </widget>
-    </widget>
+   </widget>
+  </widget>
+  <widget class="QFrame" name="frame">
+   <property name="geometry">
+    <rect>
+     <x>367</x>
+     <y>44</y>
+     <width>321</width>
+     <height>416</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(16, 16, 16);</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Box</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+   <widget class="QLabel" name="curr_ent_cnt">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>33</y>
+      <width>141</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Current entity count:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="curr_ent_cnt_2">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>52</y>
+      <width>181</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Local player entity number:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="curr_ent_cnt_val">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>30</y>
+      <width>91</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>-</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="loc_p_ent_num">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>50</y>
+      <width>91</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>-</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="curr_ent_cnt_3">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>72</y>
+      <width>181</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Current target entity number:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="curr_tgt">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>70</y>
+      <width>91</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>-</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="curr_ent_cnt_4">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>92</y>
+      <width>191</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Current target entity distance x:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="curr_ent_cnt_5">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>112</y>
+      <width>191</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Current target entity distance y:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="dist_x">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>90</y>
+      <width>91</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>-</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="dist_y">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>110</y>
+      <width>91</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>-</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="aimbot_state_ui">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>301</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>AIMBOT ON STANDBY</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="curr_ent_cnt_6">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>132</y>
+      <width>51</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Recoil:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="ent_recoil">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>130</y>
+      <width>241</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>-</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="curr_ent_cnt_7">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>152</y>
+      <width>81</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Weapon idx:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="ent_weapon">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>150</y>
+      <width>221</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>-</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="curr_ent_cnt_8">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>172</y>
+      <width>51</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Angles:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="ent_angles">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>170</y>
+      <width>251</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>-</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="curr_ent_cnt_9">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>192</y>
+      <width>121</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Local player velocity:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="loc_player_vel">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>190</y>
+      <width>91</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>-</string>
+    </property>
    </widget>
   </widget>
  </widget>

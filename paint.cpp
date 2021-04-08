@@ -80,12 +80,18 @@ int Paint::render()
     if (targetWnd == GetForegroundWindow()){
         int entityIndex = 1;
         do {
-           if(entityIndex >= 64)
-               break;      // checks only player entities [max = 64]
+           if(entityIndex >= 64) break;      // checks only player entities [max = 64]
+
            if(e[entityIndex].health > 0 && e[entityIndex].team != e[0].team){
-               Glow::ProcessD3D9Render(ci[entityIndex], e[entityIndex], entityIndex);
+               try {
+                   Glow::ProcessD3D9Render(ci[entityIndex], e[entityIndex], entityIndex);
+               }  catch(...) {
+                   continue;
+               }
+
            }
         } while(ci[entityIndex++].nextEntity);
+        std::cout << Paint::height << " " << Paint::width << std::endl;
 
         StringOutlined((char*)watermark.c_str(),5,30,255,0,1,0, 255, 255, 255 ,255);   // watermark
         Sleep(1);

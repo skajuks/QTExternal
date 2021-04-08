@@ -41,7 +41,8 @@ int   flashAmount       =     0;
 float nightmode_amount  = 0.04f;
 int   aimbot_on_key     =  LEFT_MOUSE_BUTTON;                            // mouse 1 default
 bool  enable_silent     = false;
-bool  jump_shot         = false;
+bool  jump_shot         = false;    // ADD AIMBOT TOGGLE ON AIMKEY LMAO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+bool  toggle_aimbot_key = false;
 
 extern int aimfov;
 
@@ -53,23 +54,16 @@ class Glow;
 int main(int argc, char** argv) {
     auto app = new QApplication(argc, argv);
     auto window = new Widget;
-    DWORD aColors[2];
-    int elements[2] = {COLOR_WINDOW, COLOR_ACTIVECAPTION};
-    aColors[0] = RGB(0x80, 0xFF, 0x80);
-    aColors[1] = RGB(0x80, 0xFF, 0x80);
 
     qApp->setStyle(QStyleFactory::create("Fusion"));
     qApp->setStyleSheet(style_sheet);
-    SetSysColors(2, elements, aColors);
 
     window->show();
 
-    AllocConsole();
-    freopen("CONOUT$", "w", stdout);
+    //AllocConsole();
+    //freopen("CONOUT$", "w", stdout);
 
     // add a sigscan here
-
-    // add d3d9 thread here
 
     uintptr_t glowObjectManager = Memory.readMem<uintptr_t>(gameModule + dwGlowObjectManager);
 
@@ -81,8 +75,6 @@ int main(int argc, char** argv) {
 
     QTimer *timer = new QTimer(window);
     QObject::connect(timer, &QTimer::timeout, [&](){
-
-        //printf("toggleAimbot = %d\n", toggleAimbot);
 
         int entityIndex = 1;
         float oldx = std::numeric_limits<float>::max();
@@ -146,15 +138,28 @@ int main(int argc, char** argv) {
                 inp[0].mi.dwFlags = MOUSEEVENTF_LEFTUP;
                 SendInput(1, inp, sizeof(INPUT));
             }
-            variables = Aim::executeAimbot(ci[targetIndex], e[0], ci[0]);        // execute code only if aimbot is actually enabled
-            window->ui->aimbot_state_ui->setText(QString("AIMBOT ACTIVE"));
+            if(toggle_aimbot_key) {
+                if (GetAsyncKeyState(0x43)){
+                    variables = Aim::executeAimbot(ci[targetIndex], e[0], ci[0]);
+                }
+            } else {
+                variables = Aim::executeAimbot(ci[targetIndex], e[0], ci[0]);        // execute code only if aimbot is actually enabled
+            }
+        }
+        // debug section
+
+        if(toggleAimbot){
+            if(toggle_aimbot_key){
+                 window->ui->aimbot_state_ui->setText(QString("AIMBOT ACTIVE [ ARMED ON KEY ]"));
+            } else {
+                 window->ui->aimbot_state_ui->setText(QString("AIMBOT ACTIVE"));
+            }
             window->ui->aimbot_state_ui->setStyleSheet(QString("QLabel{color: rgba(0,255,0,255)}"));
         } else {
             window->ui->aimbot_state_ui->setText(QString("AIMBOT ON STANDBY"));
             window->ui->aimbot_state_ui->setStyleSheet(QString("QLabel{color: rgba(255,255,0,255)}"));
         }
 
-        // debug section
         float velocity = e[0].vecVelocity.z;
         window->ui->loc_player_vel->setText(QString::number(velocity));
         velocity > 0 ? window->ui->loc_player_vel->setStyleSheet(QString("QLabel{color: rgba(0,255,0,255)}")) : window->ui->loc_player_vel->setStyleSheet(QString("QLabel{color: rgba(255,255,0,255)}"));
@@ -173,7 +178,7 @@ int main(int argc, char** argv) {
     });
     timer->start(1);
 
-    //std::thread(ESP::run).detach();
+    std::thread(ESP::run).detach();     // d9x9 thread
 
     return app->exec();
 }
@@ -188,6 +193,11 @@ Widget::Widget(QWidget *parent)
 Widget::~Widget()
 {
     delete ui;
+}
+
+void Widget::on_toggle_aimbot_on_key_stateChanged(int arg1)
+{
+    toggle_aimbot_key = !toggle_aimbot_key;
 }
 
 void Widget::on_jump_shot_enable_stateChanged(int arg1)

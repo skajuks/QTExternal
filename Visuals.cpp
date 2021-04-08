@@ -136,40 +136,46 @@ void Glow::setBrightness() {
 }
 
 void Glow::ProcessEntityTeam(const ClientInfo& ci, uintptr_t glowObject) {
-    int glowIndex = Memory.readMem<int>(ci.entity + m_iGlowIndex);
-    GlowObject tGlow;
-    Memory.readMemTo<GlowObject>(glowObject + (glowIndex * 0x38), &tGlow);
-    //tGlow = {{}, (float)TeamR, (float)TeamG, (float)TeamB, alpha, {}, true, false};
-    tGlow.red = TeamR;
-    tGlow.green = TeamG;
-    tGlow.blue = TeamB;
-    tGlow.alpha = alpha;
-    tGlow.renderWhenOccluded = true;
-    tGlow.renderWhenUnoccluded = false;
-    Memory.writeMemFrom<GlowObject>(glowObject + (glowIndex * 0x38), &tGlow);
-    Memory.writeMemFrom<Chams>(ci.entity + m_clrRender, &clr_team);
+    if(glow_enabled){
+        int glowIndex = Memory.readMem<int>(ci.entity + m_iGlowIndex);
+        GlowObject tGlow;
+        Memory.readMemTo<GlowObject>(glowObject + (glowIndex * 0x38), &tGlow);
+        //tGlow = {{}, (float)TeamR, (float)TeamG, (float)TeamB, alpha, {}, true, false};
+        tGlow.red = TeamR;
+        tGlow.green = TeamG;
+        tGlow.blue = TeamB;
+        tGlow.alpha = alpha;
+        tGlow.renderWhenOccluded = true;
+        tGlow.renderWhenUnoccluded = false;
+        Memory.writeMemFrom<GlowObject>(glowObject + (glowIndex * 0x38), &tGlow);
+        Memory.writeMemFrom<Chams>(ci.entity + m_clrRender, &clr_team);
+    }
 }
 
 void Glow::ProcessEntityEnemy(const ClientInfo& ci, const Entity& e, uintptr_t glowObject) {
-    int glowIndex = Memory.readMem<int>(ci.entity + m_iGlowIndex);
-    GlowObject eGlow;
-    Memory.readMemTo<GlowObject>(glowObject + (glowIndex * 0x38), &eGlow);
-    eGlow = setGlowColor(eGlow, e.health, ci.entity);
-    Memory.writeMemFrom<GlowObject>(glowObject + (glowIndex * 0x38), &eGlow);
-    Memory.writeMemFrom<Chams>(ci.entity + m_clrRender, &clr_enemy);
+    if(glow_enabled){
+        int glowIndex = Memory.readMem<int>(ci.entity + m_iGlowIndex);
+        GlowObject eGlow;
+        Memory.readMemTo<GlowObject>(glowObject + (glowIndex * 0x38), &eGlow);
+        eGlow = setGlowColor(eGlow, e.health, ci.entity);
+        Memory.writeMemFrom<GlowObject>(glowObject + (glowIndex * 0x38), &eGlow);
+        Memory.writeMemFrom<Chams>(ci.entity + m_clrRender, &clr_enemy);
+    }
 }
 
 void Glow::ProcessTargetEntity(const ClientInfo& ci, uintptr_t glowObject) {
-    int glowIndex = Memory.readMem<int>(ci.entity + m_iGlowIndex);
-    GlowObject targetGlow;
-    Memory.readMemTo<GlowObject>(glowObject + (glowIndex * 0x38), &targetGlow);
-    targetGlow.red = 255;
-    targetGlow.green = 255;
-    targetGlow.blue = 0;
-    targetGlow.alpha = 255;
-    targetGlow.renderWhenOccluded = true;
-    targetGlow.renderWhenUnoccluded = false;
-    Memory.writeMemFrom<GlowObject>(glowObject + (glowIndex * 0x38), &targetGlow);
+    if(glow_enabled){
+        int glowIndex = Memory.readMem<int>(ci.entity + m_iGlowIndex);
+        GlowObject targetGlow;
+        Memory.readMemTo<GlowObject>(glowObject + (glowIndex * 0x38), &targetGlow);
+        targetGlow.red = 255;
+        targetGlow.green = 255;
+        targetGlow.blue = 0;
+        targetGlow.alpha = 255;
+        targetGlow.renderWhenOccluded = true;
+        targetGlow.renderWhenUnoccluded = false;
+        Memory.writeMemFrom<GlowObject>(glowObject + (glowIndex * 0x38), &targetGlow);
+    }
 }
 
 void Glow::ProcessD3D9Render(const ClientInfo& ci, const Entity& e, int index){
@@ -189,6 +195,8 @@ void Glow::ProcessD3D9Render(const ClientInfo& ci, const Entity& e, int index){
         VECTOR3 screenhead = Math::WorldToScreen(head, &vm, Paint::width, Paint::height);               // get player cooardinates
         int height_f = screenpos.y - screenhead.y;
         int width_f = height_f / 2;
+        if(Paint::height < 1070 && Paint::width < 1900) // needed for smaller res, so boxes are drawn at correct position
+            screenhead.y += 10;
 
         // = = = = = = = = = = = = = = = = = = =[   Draw on screen  ]= = = = = = = = = = = = = = = =
 
