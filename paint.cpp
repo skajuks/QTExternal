@@ -91,7 +91,6 @@ int Paint::render()
 
            }
         } while(ci[entityIndex++].nextEntity);
-        std::cout << Paint::height << " " << Paint::width << std::endl;
 
         StringOutlined((char*)watermark.c_str(),5,30,255,0,1,0, 255, 255, 255 ,255);   // watermark
         Sleep(1);

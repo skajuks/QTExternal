@@ -7,10 +7,18 @@ extern int process_id;
 extern uintptr_t gameModule;
 extern uintptr_t engineModule;
 extern uintptr_t engineModulep;
-//extern Offsets pOffsets;
+extern Offsets pOffsets;
 
 class Functions{
 public:
+    // moves
+    static void moveRight();
+    static void moveLeft();
+    static void moveClearY();
+    static void moveForward();
+    static void moveClearX();
+
+    static void loadSkybox(const char* skyname);
     static uintptr_t getClientState();
     static void checkForLocalPlayer();
     static uintptr_t getLocalPlayer();
@@ -25,5 +33,8 @@ public:
     static uintptr_t getEntity(int index);
     static char* getActiveWeapon(int entityWeapon);
     static bool checkIfScoped(uintptr_t entity);
+    static void forwardSpeed(int value);
+    static void sideSpeed(float value);
+    static void clientCmd_Unrestricted(const char* command);
 
 };extern Functions fun;

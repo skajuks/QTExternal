@@ -19,16 +19,9 @@ struct customAutoExposure{
 customAutoExposure* cAX;
 
 bool bhop_enabled = 1;
-bool blockbot_enabled = 0;
 
 bool toggleNoFlash = false;
 int flashAmmount = 0;
-
-float distance_factor = 2.f;
-float trajectory_factor = 0.45f;
-
-//uintptr_t cl_sidespeed = Memory.FindSignature((char*)"client.dll", "0xF3\0x0F\0x10\0x05\0x00\0x00\0x00\0x00\0xF3\0x0F\0x11\0x44\0x24\0x00\0x81\0x74\0x24\0x00\0x00\0x00\0x00\0x00\0xD9\0x44\0x24\0x14\0xEB\0x07", "xxxx????xxxxx?xxx?????xxxxxx") + 0x4;
-//uintptr_t cl_forwardspeed = Memory.FindSignature((char*)"client.dll", "0xF3\0x0F\0x10\0x05\0x00\0x00\0x00\0x00\0xF3\0x0F\0x11\0x44\0x24\0x00\0x81\0x74\0x24\0x00\0x00\0x00\0x00\0x00\0xEB\0x37", "xxxx????xxxxx?xxx?????xx") + 0x4;
 
 DWORD m_hTonemapController = 0x31CC; //DT_CSPlayer
 DWORD fm_bUseCustomAutoExposureMax = 0x9D4;
@@ -42,6 +35,44 @@ bool Misc::bhopEnabled(){
 
 void Misc::setBhopEnabled(bool state){
     bhop_enabled = state;
+}
+
+void Misc::doBlockBot(float side, float forward){
+    CInput Input;
+    DWORD clientState;
+
+    Input = Memory.readMem<CInput>(gameModule + dwInput);
+    clientState = Functions::getClientState();
+
+    Memory.writeMem<BYTE>(engineModule + dwbSendPackets, 0); //disable packet send
+
+    int desiredCMD;
+    desiredCMD = Memory.readMem<int>(clientState + clientstate_last_outgoing_command);
+    desiredCMD += 2; // +2 for incomming one
+
+    DWORD incommingUserCMD = Input.Commands + (desiredCMD % 150) * sizeof(CUserCmd);
+    DWORD currentUserCMD = Input.Commands + ((desiredCMD - 1) % 150) * sizeof(CUserCmd);
+    DWORD verifiedCurUserCMD = Input.VerifiedCommands + ((desiredCMD - 1) % 150) * sizeof(CVerifiedUserCmd);
+
+    int CMDNumber = NULL;
+    while(CMDNumber < desiredCMD)
+        CMDNumber = Memory.readMem<int>(incommingUserCMD + 0x04);
+
+    CUserCmd cmd; // read the usercmd
+    Memory.readMemTo<CUserCmd>(currentUserCMD, &cmd);
+
+    cmd.Sidemove = side;
+    cmd.Forwardmove = forward;
+
+    Memory.writeMemFrom<CUserCmd>(currentUserCMD, &cmd);
+    Memory.writeMemFrom<CUserCmd>(verifiedCurUserCMD, &cmd);
+
+    Memory.writeMem<BYTE>(engineModule + dwbSendPackets, 1); //restore packet sending :)
+
+}
+
+void Misc::doorSpammer(int use){
+    Memory.writeMem<int>(Memory.readMem<int>(gameModule + pOffsets.dwUse), use);
 }
 
 void Misc::changeFov(const ClientInfo& localPlayer, int fov){

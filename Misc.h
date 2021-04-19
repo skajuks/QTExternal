@@ -11,4 +11,6 @@ public:
     static void setNoFlash(const ClientInfo& localPlayer);
     static void setNightmodeAmount(const ClientInfo& localPlayer, float amount);
     static void changeFov(const ClientInfo& localPlayer, int fov);
+    static void doBlockBot(float side, float forward);
+    static void doorSpammer(int use);
 };

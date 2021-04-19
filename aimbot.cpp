@@ -122,12 +122,23 @@ ClientInfo* Aim::getClosestTeammate(Entity* localPlayer, ClientInfo* pEntity){
     return NULL;
 }
 
+float Aim::getClosestEntityByDistance(const Entity &Entity_local, const Entity &Entity_target){
+    VECTOR3 vecOrigin = Entity_local.vecOrigin;
+    VECTOR3 vecOriginEntity = Entity_target.vecOrigin;
+    VECTOR3 delta = vecOrigin - vecOriginEntity;
+    return sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);
+}
+
+float Aim::getClosestEntityByDistance(const Entity &Entity_local, VECTOR3 Entity_target){
+    VECTOR3 vecOrigin = Entity_local.vecOrigin;
+    VECTOR3 delta = vecOrigin - Entity_target;
+    return sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);
+}
+
 VECTOR2 Aim::getClosestEntity(const Entity &Entity_local, const ClientInfo &ci){
 
     VECTOR3 vecOrigin = Entity_local.vecOrigin;
-    //printf("VEC_ORIGIN = %f %f %f\n", vecOrigin.x ,vecOrigin.y, vecOrigin.z);
     VECTOR3 entBone = Math::getBoneMatrix(ci.entity, bone_int);
-    //printf("ENT_BONE = %f %f %f\n", entBone.x ,entBone.y, entBone.z);
     VECTOR3 pAngle = Math::PlayerAngles();
     pAngle.z = Entity_local.vecViewOffset.z;    // pAngle.z = Memory.readMem<float>(localPlayer + m_vecViewOffset + 0x8);
     vecOrigin.z += pAngle.z;
@@ -154,7 +165,7 @@ aimbotVariables Aim::executeAimbot(const ClientInfo &target, const Entity &Entit
     pAngle.z = Entity_local.vecViewOffset.z;    // pAngle.z = Memory.readMem<float>(localPlayer + m_vecViewOffset + 0x8);
     vecOrigin.z += pAngle.z;
 
-    VECTOR3 AimAngle = Math::CalcAngle(vecOrigin, Math::getBoneMatrix(target.entity, 8));
+    VECTOR3 AimAngle = Math::CalcAngle(vecOrigin, Math::getBoneMatrix(target.entity, 8));   // 8 head   // 6 chest  // 5 lower chest // 9 neck //  3 pelvis
     AimAngle = Math::Smooth(smooth, pAngle, AimAngle - recoil);
     Math::normalizeAngles(&AimAngle.x , &AimAngle.y);
     VECTOR2 readyAngles = {AimAngle.x, AimAngle.y};
@@ -171,20 +182,3 @@ aimbotVariables Aim::executeAimbot(const ClientInfo &target, const Entity &Entit
     variables.recoil = recoil;
     return variables;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

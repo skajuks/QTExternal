@@ -13,7 +13,78 @@ int process_id = Memory.getProcess(L"csgo.exe");
 uintptr_t gameModule = Memory.getModule(process_id, L"client.dll");
 uintptr_t engineModule = Memory.getModule(process_id, L"engine.dll");
 uintptr_t engineModulep = Functions::getClientState();
-//Offsets pOffsets = Memory.getOffsets(process_id);
+Offsets pOffsets = Memory.getOffsets(process_id);
+
+
+void Functions::clientCmd_Unrestricted(const char* command){    // Function used to access in-game console commands
+    if(!Memory.getAlloc()) return;
+    static uintptr_t alloc = reinterpret_cast<uintptr_t>(Memory.getAlloc());
+    static bool injected = false;
+    if(!injected){
+        BYTE Shellcode[15 + 128] = { 0x6A, 0x00,					// push   0x0
+                                            0x68, 0x00, 0x00, 0x00, 0x00,	// push   (pointer to command)
+                                            0xB8, 0x00, 0x00, 0x00, 0x00,	// mov    eax,(ClientCmd_Un)
+                                            0xFF, 0xD0,						// call   eax
+                                            0xC3 };							// ret
+                                                                            // (command)
+        *reinterpret_cast<uintptr_t*>(&Shellcode[3]) = alloc + 15;
+        *reinterpret_cast<uintptr_t*>(&Shellcode[8]) = engineModule + pOffsets.clientCmd_Unrestricted;
+        strcpy_s(reinterpret_cast<char*>(&Shellcode[15]), 128, command);
+        Memory.write<BYTE[15 + 128]>(alloc, Shellcode);
+        injected = true;
+    } else {
+        WriteProcessMemory(Memory.handle, reinterpret_cast<LPVOID>(alloc + 15), command, strlen(command) + 1,0);
+    }
+    Memory.createThread(alloc);
+}
+
+void Functions::loadSkybox(const char* skyname){
+    if(!Memory.getAlloc()) return;
+    static uintptr_t alloc = reinterpret_cast<uintptr_t>(Memory.getAlloc()) + 434;//143;      // + clientcmd
+    static bool injected = false;
+    if(!injected){
+        BYTE Shellcode[13 + 48] = { 0xB9, 0x00, 0x00, 0x00, 0x00,	// mov	ecx, (skyname address)
+                                            0xB8, 0x00, 0x00, 0x00, 0x00,	// mov	eax, (R_LoadNamedSkys address)
+                                            0xFF, 0xD0,						// call	eax
+                                            0xC3 };
+        *reinterpret_cast<uintptr_t*>(&Shellcode[1]) = alloc + 13;
+        *reinterpret_cast<uintptr_t*>(&Shellcode[6]) = engineModule + pOffsets.loadNamedSkys;
+        strcpy_s(reinterpret_cast<char*>(&Shellcode[13]), 48, skyname);
+        Memory.write<BYTE[13 + 48]>(alloc, Shellcode);
+        injected = true;
+        printf("changed sky");
+    } else {
+        WriteProcessMemory(Memory.handle, reinterpret_cast<LPVOID>(alloc + 13), skyname, strlen(skyname) + 1, 0);
+    }
+    Memory.createThread(alloc);
+}
+
+
+void Functions::moveRight(){
+    clientCmd_Unrestricted("-moveleft");
+    Sleep(1);
+    clientCmd_Unrestricted("moveright");
+}
+
+void Functions::moveLeft(){
+    clientCmd_Unrestricted("-moveright");
+    Sleep(1);
+    clientCmd_Unrestricted("moveleft");
+}
+
+void Functions::moveClearY(){
+    clientCmd_Unrestricted("-moveright");
+    Sleep(1);
+    clientCmd_Unrestricted("-moveleft");
+}
+
+void Functions::moveForward(){
+    clientCmd_Unrestricted("+forward");
+}
+
+void Functions::moveClearX(){
+    clientCmd_Unrestricted("-forward");
+}
 
 uintptr_t Functions::getClientState() {
     return Memory.readMem<uintptr_t>(engineModule + dwClientState);
@@ -50,6 +121,14 @@ bool Functions::isGameRunning(){
         return true;
     else
         return false;
+}
+
+void Functions::sideSpeed(float value) {
+    Memory.writeMem<uint32_t>(Memory.readMem<uint32_t>(gameModule + pOffsets.cl_sidespeed), (*(uint32_t*)&value) ^ pOffsets.xor_cl_sidespeed);
+}
+
+void Functions::forwardSpeed(int value) {
+    Memory.writeMem<uint32_t>(Memory.readMem<uint32_t>(gameModule + pOffsets.cl_forwardspeed), (*(uint32_t*)&value) ^ pOffsets.xor_cl_forwardspeed);
 }
 
 void Functions::setFlashDuration(uintptr_t localPlayer, int duration) {

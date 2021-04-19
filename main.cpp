@@ -43,6 +43,32 @@ int   aimbot_on_key     =  LEFT_MOUSE_BUTTON;                            // mous
 bool  enable_silent     = false;
 bool  jump_shot         = false;    // ADD AIMBOT TOGGLE ON AIMKEY LMAO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 bool  toggle_aimbot_key = false;
+bool  blockbot_enabled  = false;
+bool  blocked           = false;
+bool  door_spammer      = false;
+const char* skybox_name;
+
+const char* skybox_array[] = {"cs_baggage_skybox_",
+                              "cs_tibet",
+                              "vietnam",
+                              "sky_lunacy",
+                              "embassy",
+                              "italy",
+                              "jungle",
+                              "office",
+                              "sky_cs15_daylight01_hdr",
+                              "sky_cs15_daylight02_hdr",
+                              "nukeblank",
+                              "sky_venice",
+                              "sky_csgo_cloudy01",
+                              "sky_csgo_night02",
+                              "vertigo",
+                              "vertigoblue_hdr",
+                              "sky_dust",
+                              "sky_hr_aztec"};
+
+float distance_factor = 2.f;
+float trajectory_factor = 0.45f;
 
 extern int aimfov;
 
@@ -60,18 +86,23 @@ int main(int argc, char** argv) {
 
     window->show();
 
+    // add bones and entity selector function choices to ui
+
+    for(auto item: skybox_array){
+        window->ui->skybox_list->addItem(QString(item));
+    }
+    window->ui->aimbot_calc->addItems({"Angle fov", "Distance", "Crosshair fov"});
+    window->ui->aimbot_calc->setCurrentRow(0);
+    window->ui->aimBonesList->addItems({"8 - head", "6 - upper chest", "5 - lower chest", "9 - neck", "2 - pelvis"});
+    window->ui->aimBonesList->setCurrentRow(0);
+
     //AllocConsole();
     //freopen("CONOUT$", "w", stdout);
-
-    // add a sigscan here
-
-    uintptr_t glowObjectManager = Memory.readMem<uintptr_t>(gameModule + dwGlowObjectManager);
 
     // here goes static features that doesn't need updates
 
     Glow::setBrightness();
     //Misc::setNightmodeAmount(0.09f);
-
 
     QTimer *timer = new QTimer(window);
     QObject::connect(timer, &QTimer::timeout, [&](){
@@ -79,8 +110,11 @@ int main(int argc, char** argv) {
         int entityIndex = 1;
         float oldx = std::numeric_limits<float>::max();
         float oldy = std::numeric_limits<float>::max();
+        float bestBlockDist = 250.f;
         int targetIndex = NULL;
+        int blockTargetIndex = NULL;
         int aliveEntity = 0;
+        uintptr_t glowObjectManager = Memory.readMem<uintptr_t>(gameModule + dwGlowObjectManager);
         aimbotVariables variables;
 
         // Under here goes everything that needs to be updated for every entity except local player
@@ -101,17 +135,25 @@ int main(int argc, char** argv) {
 
                 if(e[entityIndex].team == e[0].team){
                     Glow::ProcessEntityTeam(ci[entityIndex], glowObjectManager);
+                    if(blockbot_enabled){
+                        float dist = Aim::getClosestEntityByDistance(e[0], e[entityIndex]);
+                        if(dist < bestBlockDist){
+                            bestBlockDist = dist;
+                            blockTargetIndex = entityIndex;
+                        }
+                    }
+
                 }
                 else {
                     Glow::ProcessEntityEnemy(ci[entityIndex], e[entityIndex], glowObjectManager);
-                    //if(!toggleAimbot){
+                    if(toggleAimbot){
                         VECTOR2 newDistance = Aim::getClosestEntity(e[0], ci[entityIndex]);
                         if(newDistance.x < oldx && newDistance.y < oldy && newDistance.x <= aimfov && newDistance.y <= aimfov){
                             oldx = newDistance.x;
                             oldy = newDistance.y;
-                            targetIndex = entityIndex;   // execute code only if aimbot is actually enabled
+                            targetIndex = entityIndex;
                         }
-                    //}
+                    }
                 }
             }
         } while(ci[entityIndex++].nextEntity);
@@ -119,25 +161,48 @@ int main(int argc, char** argv) {
         // Update glow for target entity
 
         Glow::ProcessTargetEntity(ci[targetIndex], glowObjectManager);
-
+        Glow::ProcessTargetEntity(ci[blockTargetIndex], glowObjectManager);
         // Under here goes everything that needs to be updated for local player only!
+
+        // blockbot
+        if(blockbot_enabled && GetAsyncKeyState(0x58) && blockTargetIndex){ // x key
+            blocked = true;
+            VECTOR3 angles = Math::CalcAngle(e[0].vecOrigin, e[blockTargetIndex].vecOrigin);
+            angles.y -= Memory.readMem<float>(ci[0].entity + m_angEyeAnglesY);
+            Math::normalizeAngles(&angles.x, &angles.y);
+
+            if(angles.y < 0.0f){
+                std::cout << "move right" << std::endl;
+                //Functions::sideSpeed(450.f);
+
+            }
+            if(angles.y > 0.0f){
+                //Functions::sideSpeed(-450.f);
+                std::cout << "move left" << std::endl;
+            }
+        }
+
+        if(blockbot_enabled && !GetAsyncKeyState(0x58) && blocked){
+            blocked = false;
+            Functions::sideSpeed(450);
+        }
+
+        if(door_spammer && GetAsyncKeyState(VK_HOME)){
+            Misc::doorSpammer(5);
+            Sleep(13);
+            Misc::doorSpammer(4);
+            Sleep(13);
+        }
 
         Misc::setBhop(e[0]);
         Misc::setNoFlash(ci[0]);
-        INPUT inp[1] = {0};
+
         if(GetAsyncKeyState(0x56) && toggleAimbot && targetIndex && jump_shot) {
             if(e[0].vecVelocity.z < 15 && e[0].vecVelocity.z > 0){
-                inp[0].type = INPUT_MOUSE;
-                inp[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-                SendInput(1, inp, sizeof(INPUT));
+                variables = Aim::executeAimbot(ci[targetIndex], e[0], ci[0]);
             }
         }
         if(GetAsyncKeyState(LEFT_MOUSE_BUTTON) && toggleAimbot && targetIndex) {
-            if(jump_shot && e[0].vecVelocity.z < 15 && e[0].vecVelocity.z > 0){
-                inp[0].type = INPUT_MOUSE;
-                inp[0].mi.dwFlags = MOUSEEVENTF_LEFTUP;
-                SendInput(1, inp, sizeof(INPUT));
-            }
             if(toggle_aimbot_key) {
                 if (GetAsyncKeyState(0x43)){
                     variables = Aim::executeAimbot(ci[targetIndex], e[0], ci[0]);
@@ -160,9 +225,9 @@ int main(int argc, char** argv) {
             window->ui->aimbot_state_ui->setStyleSheet(QString("QLabel{color: rgba(255,255,0,255)}"));
         }
 
-        float velocity = e[0].vecVelocity.z;
-        window->ui->loc_player_vel->setText(QString::number(velocity));
-        velocity > 0 ? window->ui->loc_player_vel->setStyleSheet(QString("QLabel{color: rgba(0,255,0,255)}")) : window->ui->loc_player_vel->setStyleSheet(QString("QLabel{color: rgba(255,255,0,255)}"));
+        window->ui->loc_player_vel->setText(QString::number(e[0].vecVelocity.z));
+        window->ui->pofst->setText(QString("placeholder"));
+        e[0].vecVelocity.z > 0 ? window->ui->loc_player_vel->setStyleSheet(QString("QLabel{color: rgba(0,255,0,255)}")) : window->ui->loc_player_vel->setStyleSheet(QString("QLabel{color: rgba(255,255,0,255)}"));
         window->ui->curr_ent_cnt_val->setText(QString::number(aliveEntity));
         window->ui->loc_p_ent_num->setText(QString::number(ci[0].entity));
         window->ui->curr_tgt->setText(QString::number(targetIndex));
@@ -178,7 +243,7 @@ int main(int argc, char** argv) {
     });
     timer->start(1);
 
-    std::thread(ESP::run).detach();     // d9x9 thread
+    //std::thread(ESP::run).detach();     // d9x9 thread
 
     return app->exec();
 }
@@ -193,6 +258,30 @@ Widget::Widget(QWidget *parent)
 Widget::~Widget()
 {
     delete ui;
+}
+
+void Widget::on_skybox_list_itemClicked(QListWidgetItem *item){
+    skybox_name = item->text().toStdString().c_str();
+    Functions::loadSkybox(skybox_name);
+}
+
+
+void Widget::on_skychange_clicked(){
+    Functions::loadSkybox("sky_lunacy");
+}
+
+void Widget::on_testCommand_clicked(){
+    Functions::clientCmd_Unrestricted("say \"Lmao es varu rakstit chata izmantojot cheatu un executot console komandas xDDDD\"");
+}
+
+void Widget::on_blockbot_enable_stateChanged(int arg1)
+{
+    blockbot_enabled = !blockbot_enabled;
+}
+
+void Widget::on_doorspammer_enable_stateChanged(int arg1)
+{
+    door_spammer = !door_spammer;
 }
 
 void Widget::on_toggle_aimbot_on_key_stateChanged(int arg1)

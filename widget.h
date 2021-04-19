@@ -2,6 +2,7 @@
 #define WIDGET_H
 
 #include <QWidget>
+#include <QListWidgetItem>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -78,6 +79,16 @@ private slots:
     void on_jump_shot_enable_stateChanged(int arg1);
 
     void on_toggle_aimbot_on_key_stateChanged(int arg1);
+
+    void on_doorspammer_enable_stateChanged(int arg1);
+
+    void on_blockbot_enable_stateChanged(int arg1);
+
+    void on_testCommand_clicked();
+
+    void on_skychange_clicked();
+
+    void on_skybox_list_itemClicked(QListWidgetItem *item);
 
 private:
 

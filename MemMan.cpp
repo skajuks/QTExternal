@@ -14,6 +14,7 @@ MemMan::~MemMan()
 	CloseHandle(handle);
 }
 
+module targetModule;
 
 uintptr_t MemMan::getProcess(const wchar_t* proc)
 {
@@ -63,7 +64,6 @@ uintptr_t MemMan::getAddress(uintptr_t addr, std::vector<uintptr_t> vect)
 	return addr;
 }
 
-
 bool MemMan::MemoryCompare(const BYTE* data, const BYTE* mask, const char* szMask)
 {
     for(; *szMask; ++szMask, ++data, ++mask){
@@ -73,44 +73,48 @@ bool MemMan::MemoryCompare(const BYTE* data, const BYTE* mask, const char* szMas
     return(*szMask == NULL);
 }
 
-MODULEENTRY32 MemMan::getModuleInfo(const char* modName, DWORD pid)
-{
-    HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid);
-        if (hSnap != INVALID_HANDLE_VALUE) {
-            MODULEENTRY32 modEntry;
-            modEntry.dwSize = sizeof(modEntry);
-            if (Module32First(hSnap, &modEntry)) {
-                do {
-                    if (!_wcsicmp(modEntry.szModule, (const wchar_t*)modName)) {
-                        CloseHandle(hSnap);
-                        return modEntry;
-                    }
-                } while (Module32Next(hSnap, &modEntry));
-            }
-        }
-        MODULEENTRY32 module = {};
-        return module;
+#define SIZE_CLIENTCMD (15 + 128)
+#define SIZE_LOADSKY (13 + 48)
+
+const size_t allocSize = 495;
+
+LPVOID MemMan::getAlloc(){
+    if(!alloc){
+        alloc = VirtualAllocEx(handle, 0, allocSize, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+        if(!alloc)
+           std::cout << "Warning: VirtualAllocEx failed" << std::endl;
+    }
+    return alloc;
+}
+
+void MemMan::createThread(uintptr_t address, LPVOID param){
+    HANDLE hThread = CreateRemoteThread(handle, 0, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(address), param, 0, 0);
+    if(!hThread){
+        std::cout << "CreateRemoteThread failed!" << std::endl;
+        return;
+    }
+    WaitForSingleObject(hThread, 5000);
+    CloseHandle(hThread);
 }
 
 
-uintptr_t MemMan::findPattern(MODULEENTRY32 client, uint8_t* arr, const char* pattern, int offset, int extra) {
-    uintptr_t scan = 0x0;
-    const char* pat = pattern;
-    uintptr_t firstMatch = 0;
-    for (uintptr_t pCur = (uintptr_t)arr; pCur < (uintptr_t)arr + client.modBaseSize; ++pCur) {
-        if (!*pat) { scan = firstMatch; break; }
-        if (*(uint8_t*)pat == '\?' || *(uint8_t*)pCur == ((((pat[0] & (~0x20)) >= 'A' && (pat[0] & (~0x20)) <= 'F') ? ((pat[0] & (~0x20)) - 'A' + 0xa) : ((pat[0] >= '0' && pat[0] <= '9') ? pat[0] - '0' : 0)) << 4 | (((pat[1] & (~0x20)) >= 'A' && (pat[1] & (~0x20)) <= 'F') ? ((pat[1] & (~0x20)) - 'A' + 0xa) : ((pat[1] >= '0' && pat[1] <= '9') ? pat[1] - '0' : 0)))) {
-            if (!firstMatch) firstMatch = pCur;
-            if (!pat[2]) { scan = firstMatch; break; }
-            if (*(WORD*)pat == 16191 /*??*/ || *(uint8_t*)pat != '\?') pat += 3;
-            else pat += 2;
+MODULEENTRY32 MemMan::getModuleInfo(const char* modName, DWORD pid)
+{
+    HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid);
+    if (hSnap != INVALID_HANDLE_VALUE) {
+        MODULEENTRY32 modEntry;
+        modEntry.dwSize = sizeof(modEntry);
+        if (Module32First(hSnap, &modEntry)) {
+            do {
+                if (!_wcsicmp(modEntry.szModule, (const wchar_t*)modName)) {
+                    CloseHandle(hSnap);
+                    return modEntry;
+                }
+            } while (Module32Next(hSnap, &modEntry));
         }
-        else { pat = pattern; firstMatch = 0; }
     }
-    if (!scan) return 0x0;
-    uint32_t read;
-    ReadProcessMemory(handle, (void*)(scan - (uintptr_t)arr + (uintptr_t)client.modBaseAddr + offset), &read, sizeof(read), NULL);
-    return read + extra;
+    MODULEENTRY32 module = {};
+    return module;
 }
 
 uintptr_t MemMan::FindSignature(DWORD start, DWORD size, const char* sig ,const char* mask)
@@ -132,32 +136,104 @@ uintptr_t MemMan::FindSignature(DWORD start, DWORD size, const char* sig ,const 
     return NULL;
 }
 
+int MemMan::findPattern(byte pattern[], std::string mask, int moduleBase, int moduleSize)
+{
+    BYTE* moduleBytes = new BYTE[moduleSize];
+    SIZE_T numBytes = 0;
+
+    if (ReadProcessMemory(handle, (LPCVOID)moduleBase, moduleBytes, (uintptr_t)moduleSize, &numBytes))
+    {
+        for (int i = 0; i < moduleSize; i++)
+        {
+            bool found = true;
+
+            for (size_t l = 0; l < mask.length(); l++)
+            {
+                found = mask[l] == '?' || moduleBytes[l + i] == pattern[l];
+
+                if (!found)
+                    break;
+            }
+
+            if (found)
+                return i;
+        }
+    }
+    std::cout << "not found" << std::endl;
+    return 0;
+}
+
+uintptr_t MemMan::findPattern(byte pattern[], std::string mask, int moduleBase, int moduleSize, int offset)
+{
+    BYTE* moduleBytes = new BYTE[moduleSize];
+    SIZE_T numBytes = 0;
+
+    if (ReadProcessMemory(handle, (LPCVOID)moduleBase, moduleBytes, (uintptr_t)moduleSize, &numBytes))
+    {
+        for (int i = 0; i < moduleSize; i++)
+        {
+            bool found = true;
+
+            for (size_t l = 0; l < mask.length(); l++)
+            {
+                found = mask[l] == '?' || moduleBytes[l + i] == pattern[l];
+
+                if (!found)
+                    break;
+            }
+
+            if (found)
+                return i + offset;
+        }
+    }
+    std::cout << "not found" << std::endl;
+    return 0;
+}
+
+
+module GetModule(const wchar_t* moduleName, int id) {
+    HANDLE hmodule = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, id);
+    MODULEENTRY32 mEntry;
+    mEntry.dwSize = sizeof(mEntry);
+
+    do {
+        if (!_wcsicmp(mEntry.szModule, moduleName)) {//_tcscmp
+            CloseHandle(hmodule);
+
+            targetModule = { (DWORD)mEntry.hModule, mEntry.modBaseSize };
+            return targetModule;
+        }
+    } while (Module32Next(hmodule, &mEntry));
+
+    module mod = { (DWORD64)false, (DWORD64)false };
+    return mod;
+}
+
+UINT32 calcXorWithValue(int cvarOffset)
+        {
+            return Memory.readMem<UINT32>(gameModule + cvarOffset) - 0x2C;
+        }
+
+
 Offsets MemMan::getOffsets(int id){
     Offsets pOffsets;
-    HANDLE h = OpenProcess(PROCESS_ALL_ACCESS, false ,id);
-    MODULEENTRY32 client = getModuleInfo("client.dll", id);
-    auto bytes = new uint8_t[client.modBaseSize];
-    DWORD bytes_read;
-    ReadProcessMemory(h, client.modBaseAddr, bytes, client.modBaseSize, &bytes_read);
-    if(bytes_read != client.modBaseSize) throw;
+    module enginemod = GetModule(L"engine.dll", id);
+    module mod = GetModule(L"client.dll", id);
+    pOffsets.dwForceJump = findPattern(new byte[] { 0x8B, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x8B, 0xD6, 0x8B, 0xC1, 0x83, 0xCA, 0x02}, "xx????xxxxxxx", mod.dwBase, mod.dwSize, 0x02);
+    pOffsets.cl_sidespeed = findPattern(new byte[] { 0xF3, 0x0F, 0x10, 0x05, 0x00, 0x00, 0x00, 0x00, 0xF3, 0x0F, 0x11, 0x44, 0x24, 0x00, 0x81, 0x74, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0xD9, 0x44, 0x24, 0x14, 0xEB, 0x07 }, "xxxx????xxxxx?xxx?????xxxxxx", mod.dwBase, mod.dwSize) + 0x4;
+    pOffsets.cl_forwardspeed = findPattern(new byte[] { 0xF3, 0x0F, 0x10, 0x05, 0x00, 0x00, 0x00, 0x00, 0xF3, 0x0F, 0x11, 0x44, 0x24, 0x00, 0x81, 0x74, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEB, 0x37 }, "xxxx????xxxxx?xxx?????xx", mod.dwBase, mod.dwSize) + 0x4;
+    pOffsets.dwUse = findPattern(new byte[] { 0x8B, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x8B, 0xF2, 0x8B, 0xC1, 0x83, 0xCE, 0x20 }, "xx????xxxxxxx", mod.dwBase, mod.dwSize) + 2;
+    pOffsets.clientCmd_Unrestricted = findPattern(new byte[] { 0x55,0x8B,0xEC,0x8B,0x0D,0x00,0x00,0x00,0x00,0x81,0xF9,0x00,0x00,0x00,0x00,0x75,0x0C,0xA1,0x00,0x00,0x00,0x00,0x35,0x00,0x00,0x00,0x00,0xEB,0x05,0x8B,0x01,0xFF,0x50,0x34,0x50},
+    "xxxxx????xx????xxx????x????xxxxxxxx", enginemod.dwBase, enginemod.dwSize);
+    //pOffsets.modelInfoClient = findPattern(new byte[] { 0x8D,0x44,0x24,0x3C,0x8B,0xF1,0x50,0x8D,0x44,0x24,0x3C,0xB9}, "xxxxxxxxxxxx", enginemod.dwBase, enginemod.dwSize) + 0xC;
+    //pOffsets.loadNamedSkys = findPattern(new byte[] { 0x55,0x8B,0xEC,0x81,0xEC,0x34,0x01,0x00,0x00,0x56}, "xxxxxxxxxx", enginemod.dwBase, enginemod.dwSize);
+    pOffsets.loadNamedSkys = findPattern(new byte[] { 0x55,0x8B,0xEC,0x81,0xEC,0x00,0x00,0x00,0x00,0x56, 0x57, 0x8B, 0xF9, 0xC7, 0x45}, "xxxxx????xxxxxx", enginemod.dwBase, enginemod.dwSize);
 
-    pOffsets.dwLocalPlayer = findPattern(client, bytes,
-                                         "8D 34 85 ? ? ? ? 89 15 ? ? ? ? 8B 41 08 8B 48 04 83 F9 FF",
-                                         3, 4);
-    //pOffsets.dwLocalPlayer = pOffsets.dwLocalPlayer - (uintptr_t)client.modBaseAddr;
+    pOffsets.xor_cl_sidespeed = calcXorWithValue(pOffsets.cl_sidespeed);
+    pOffsets.xor_cl_forwardspeed = calcXorWithValue(pOffsets.cl_forwardspeed);
 
-    pOffsets.dwEntityList = findPattern(client, bytes,
-                                        "BB ? ? ? ? 83 FF 01 0F 8C ? ? ? ? 3B F8",
-                                        1, 0);
-    //pOffsets.dwEntityList = pOffsets.dwEntityList - (uintptr_t)client.modBaseAddr;
 
-    delete[] bytes;
 
-    /*pOffsets.dwLocalPlayer = FindSignature(clientDLL.dwBase, clientDLL.dwSize,
-                                           "\x8D\x34\x85\x00\x00\x00\x00\x89\x15\x00\x00\x00\x00\x8B\x41\x08\x8B\x48\x04\x83\xF9\xFF",
-                                           "xxx????xx????xxxxxxxxx");
-    pOffsets.dwLocalPlayer = readMem<uintptr_t>(pOffsets.dwLocalPlayer + 4);
-    pOffsets.dwLocalPlayer = readMem<uintptr_t>(pOffsets.dwLocalPlayer);*/
-    //pOffsets.dwLocalPlayer = pOffsets.dwLocalPlayer - gameModule;
+    std::cout << std::hex << pOffsets.loadNamedSkys << std::endl;
     return pOffsets;
 }

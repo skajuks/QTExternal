@@ -14,5 +14,7 @@ public:
     static VECTOR2 getClosestEntity(const Entity &Entity_local, const ClientInfo &ci);
     static aimbotVariables executeAimbot(const ClientInfo &target, const Entity &Entity_local, const ClientInfo &local_ci);
     static void enableJumpShot();
+    static float getClosestEntityByDistance(const Entity &Entity_local, VECTOR3 Entity_target);
+    static float getClosestEntityByDistance(const Entity &Entity_local, const Entity &Entity_target);
 };
 
