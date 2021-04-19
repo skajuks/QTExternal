@@ -1,6 +1,7 @@
 #include "Functions.h"
 #include "offsets.hpp"
 #include "windows.h"
+#include "csmath.h"
 #include <TlHelp32.h>
 #include <iostream>
 

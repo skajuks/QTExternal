@@ -74,6 +74,55 @@ void Math::normalizeAngles(float* viewAnglex, float* viewAngley) {
         *viewAngley += 360;
 }
 
+float Math::vectorNormalize(VECTOR2& v)
+{
+    float l = sqrt(v.x * v.x + v.y * v.y);
+    if (l != 0.f){
+        v.x /= l;
+        v.y /= l;
+    }
+    else
+        v.x = v.y = 0.f;
+    return l;
+}
+
+void Math::AngleVectors(const VECTOR3& angles, VECTOR2* forward, VECTOR2* right, VECTOR2* up)
+{
+    float radPitch = DEG2RAD(angles.x),
+        radYaw = DEG2RAD(angles.y),
+        radRoll = DEG2RAD(angles.z);
+
+    float sp = sin(radPitch),
+        cp = cos(radPitch);
+
+    float sy = sin(radYaw),
+        cy = cos(radYaw);
+
+    float sr = sin(radRoll),
+        cr = cos(radRoll);
+
+    if (forward)
+    {
+        forward->x = cp * cy;
+        forward->y = cp * sy;
+    }
+
+    if (right)
+    {
+        right->x = (-1 * sr*sp*cy + -1 * cr*-sy);
+        right->y = (-1 * sr*sp*sy + -1 * cr*cy);
+    }
+
+    if (up)
+    {
+        up->x = (cr*sp*cy + -sr * -sy);
+        up->y = (cr*sp*sy + -sr * cy);
+    }
+}
+
+
+
+
 VECTOR3 Math::CalcAngle(VECTOR3 src, VECTOR3 dst)
 {
     VECTOR3 angles;
@@ -95,8 +144,7 @@ VECTOR3 Math::CalcAngle(VECTOR3 src, VECTOR3 dst)
 }
 
 VECTOR3 Math::PlayerPos(uintptr_t entity){
-    VECTOR3 pos = Memory.readMem<VECTOR3>(entity + m_vecOrigin);
-    return pos;
+    return Memory.readMem<VECTOR3>(entity + m_vecOrigin);
 }
 
 VECTOR3 Math::getBoneMatrix(uintptr_t entity, int bone) {

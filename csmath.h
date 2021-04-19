@@ -3,6 +3,10 @@
 #include <windows.h>
 
 #pragma once
+
+#define RAD2DEG(rad)	( static_cast<float>(rad) * static_cast<float>(180.f / M_PI) )
+#define DEG2RAD(deg)	( static_cast<float>(deg) * static_cast<float>(M_PI / 180.f) )
+
 struct VECTOR2{
     float x,y;
 };
@@ -84,6 +88,8 @@ struct Entity;
 class Math
 {
 public:
+    static float vectorNormalize(VECTOR2& v);
+    static void AngleVectors(const VECTOR3& angles, VECTOR2* forward, VECTOR2* right, VECTOR2* up);
     static bool checkForVelocity(const Entity& local_entity);
     static VECTOR3 WorldToScreen(const VECTOR3 pos, view_matrix_t* matrix, int width, int height);
     static VECTOR2 CalcDistance(float currx, float curry, float newx, float newy);

@@ -46,7 +46,11 @@ bool  toggle_aimbot_key = false;
 bool  blockbot_enabled  = false;
 bool  blocked           = false;
 bool  door_spammer      = false;
+bool  thirdperson       = false;
 const char* skybox_name;
+
+bool disabler = false;
+bool disablel = false;
 
 const char* skybox_array[] = {"cs_baggage_skybox_",
                               "cs_tibet",
@@ -165,26 +169,53 @@ int main(int argc, char** argv) {
         // Under here goes everything that needs to be updated for local player only!
 
         // blockbot
+
+
+
         if(blockbot_enabled && GetAsyncKeyState(0x58) && blockTargetIndex){ // x key
             blocked = true;
-            VECTOR3 angles = Math::CalcAngle(e[0].vecOrigin, e[blockTargetIndex].vecOrigin);
-            angles.y -= Memory.readMem<float>(ci[0].entity + m_angEyeAnglesY);
-            Math::normalizeAngles(&angles.x, &angles.y);
+            VECTOR3 currentAngle = Math::PlayerAngles();
+            VECTOR3 bestPos = e[blockTargetIndex].vecOrigin - e[0].vecOrigin;
+            VECTOR3 aimAngle(currentAngle.x, RAD2DEG(atan2(bestPos.y, bestPos.x)), currentAngle.z);
+            Math::ClampAngles(&aimAngle.x, &aimAngle.y);
 
-            if(angles.y < 0.0f){
-                std::cout << "move right" << std::endl;
-                //Functions::sideSpeed(450.f);
+            VECTOR2 svForward, svRight;
+            Math::AngleVectors(currentAngle, &svForward, &svRight, nullptr);
+            Math::vectorNormalize(svForward);
+            Math::vectorNormalize(svRight);
+
+            VECTOR2 clForward, clRight;
+            Math::AngleVectors(aimAngle, &clForward, &clRight, nullptr);
+            Math::vectorNormalize(clForward);
+            Math::vectorNormalize(clRight);
+
+            float divider = (svForward.x * svRight.y - svForward.y * svRight.x);
+            if(divider == 0.f){
 
             }
-            if(angles.y > 0.0f){
-                //Functions::sideSpeed(-450.f);
-                std::cout << "move left" << std::endl;
+            else {
+                float fmove = -((clForward.x*svRight.y - clForward.y*svRight.x)*450.f) / divider;
+                float smove = ((clForward.x*svForward.y - clForward.y*svForward.x)*450.f) / divider;
+
+                if(fmove > 0.f){
+                    Memory.write<int8_t>(pOffsets.forward, 5);
+                } else if (fmove < 0.f){
+                    Memory.write<int8_t>(pOffsets.back, 5);
+                }
+                if(smove > 0.f){
+                    Memory.write<int8_t>(pOffsets.right, 5);
+                } else if (smove < 0.f){
+                    Memory.write<int8_t>(pOffsets.left, 5);
+                }
             }
         }
 
-        if(blockbot_enabled && !GetAsyncKeyState(0x58) && blocked){
+        if(blocked && blockbot_enabled && !GetAsyncKeyState(0x58)){
+            Memory.write<int8_t>(pOffsets.right, 4);
+            Memory.write<int8_t>(pOffsets.forward, 4);
+            Memory.write<int8_t>(pOffsets.back, 4);
+            Memory.write<int8_t>(pOffsets.left, 4);
             blocked = false;
-            Functions::sideSpeed(450);
         }
 
         if(door_spammer && GetAsyncKeyState(VK_HOME)){
@@ -258,6 +289,14 @@ Widget::Widget(QWidget *parent)
 Widget::~Widget()
 {
     delete ui;
+}
+
+void Widget::on_thirdperson_toggle_stateChanged(int arg1){
+    thirdperson = !thirdperson;
+    if(thirdperson)
+        Memory.writeMem<int>(ci[0].entity + m_iObserverMode, 1);
+    else
+        Memory.writeMem<int>(ci[0].entity + m_iObserverMode, 0);
 }
 
 void Widget::on_skybox_list_itemClicked(QListWidgetItem *item){

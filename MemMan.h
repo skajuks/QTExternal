@@ -19,6 +19,10 @@ struct Offsets{
     uintptr_t clientCmd_Unrestricted;
     uintptr_t modelInfoClient;
     uintptr_t loadNamedSkys;
+    uintptr_t forward;
+    uintptr_t back;
+    uintptr_t right;
+    uintptr_t left;
 };
 
 class MemMan

@@ -90,6 +90,8 @@ private slots:
 
     void on_skybox_list_itemClicked(QListWidgetItem *item);
 
+    void on_thirdperson_toggle_stateChanged(int arg1);
+
 private:
 
 };

@@ -349,7 +349,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>2</number>
    </property>
    <widget class="QWidget" name="Aimbot">
     <attribute name="title">
@@ -1101,7 +1101,7 @@
        <string>Enable Noflash</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="noflash_enable_2">
+     <widget class="QCheckBox" name="thirdperson_toggle">
       <property name="geometry">
        <rect>
         <x>10</x>
