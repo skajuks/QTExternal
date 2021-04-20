@@ -41,7 +41,7 @@ int   flashAmount       =     0;
 float nightmode_amount  = 0.04f;
 int   aimbot_on_key     =  LEFT_MOUSE_BUTTON;                            // mouse 1 default
 bool  enable_silent     = false;
-bool  jump_shot         = false;    // ADD AIMBOT TOGGLE ON AIMKEY LMAO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+bool  jump_shot         = false;
 bool  toggle_aimbot_key = false;
 bool  blockbot_enabled  = false;
 bool  blocked           = false;
@@ -100,9 +100,6 @@ int main(int argc, char** argv) {
     window->ui->aimBonesList->addItems({"8 - head", "6 - upper chest", "5 - lower chest", "9 - neck", "2 - pelvis"});
     window->ui->aimBonesList->setCurrentRow(0);
 
-    //AllocConsole();
-    //freopen("CONOUT$", "w", stdout);
-
     // here goes static features that doesn't need updates
 
     Glow::setBrightness();
@@ -140,11 +137,13 @@ int main(int argc, char** argv) {
                 if(e[entityIndex].team == e[0].team){
                     Glow::ProcessEntityTeam(ci[entityIndex], glowObjectManager);
                     if(blockbot_enabled){
-                        float dist = Aim::getClosestEntityByDistance(e[0], e[entityIndex]);
-                        if(dist < bestBlockDist){
-                            bestBlockDist = dist;
-                            blockTargetIndex = entityIndex;
-                        }
+                        float dist = Aim::getClosestEntityByDistance(e[0].vecOrigin, e[entityIndex].vecOrigin);
+                        if(!Math::equalVector(e[0].vecOrigin, e[entityIndex].vecOrigin))
+                            if(dist < bestBlockDist && entityIndex != 0){
+                                bestBlockDist = dist;
+                                blockTargetIndex = entityIndex;
+
+                            }
                     }
 
                 }
@@ -162,15 +161,15 @@ int main(int argc, char** argv) {
             }
         } while(ci[entityIndex++].nextEntity);
 
-        // Update glow for target entity
+        //std::cout << e[0].vecOrigin.x << "  -  " << e[blockTargetIndex].vecOrigin.x << std::endl;
 
+        // Update glow for target entity
         Glow::ProcessTargetEntity(ci[targetIndex], glowObjectManager);
         Glow::ProcessTargetEntity(ci[blockTargetIndex], glowObjectManager);
+
         // Under here goes everything that needs to be updated for local player only!
 
         // blockbot
-
-
 
         if(blockbot_enabled && GetAsyncKeyState(0x58) && blockTargetIndex){ // x key
             blocked = true;
@@ -245,19 +244,16 @@ int main(int argc, char** argv) {
         // debug section
 
         if(toggleAimbot){
-            if(toggle_aimbot_key){
+            if(toggle_aimbot_key)
                  window->ui->aimbot_state_ui->setText(QString("AIMBOT ACTIVE [ ARMED ON KEY ]"));
-            } else {
-                 window->ui->aimbot_state_ui->setText(QString("AIMBOT ACTIVE"));
-            }
+            window->ui->aimbot_state_ui->setText(QString("AIMBOT ACTIVE"));
             window->ui->aimbot_state_ui->setStyleSheet(QString("QLabel{color: rgba(0,255,0,255)}"));
-        } else {
-            window->ui->aimbot_state_ui->setText(QString("AIMBOT ON STANDBY"));
-            window->ui->aimbot_state_ui->setStyleSheet(QString("QLabel{color: rgba(255,255,0,255)}"));
         }
 
+        window->ui->aimbot_state_ui->setText(QString("AIMBOT ON STANDBY"));
+        window->ui->aimbot_state_ui->setStyleSheet(QString("QLabel{color: rgba(255,255,0,255)}"));
         window->ui->loc_player_vel->setText(QString::number(e[0].vecVelocity.z));
-        window->ui->pofst->setText(QString("placeholder"));
+        window->ui->pofst->setText(QString::number(bestBlockDist));
         e[0].vecVelocity.z > 0 ? window->ui->loc_player_vel->setStyleSheet(QString("QLabel{color: rgba(0,255,0,255)}")) : window->ui->loc_player_vel->setStyleSheet(QString("QLabel{color: rgba(255,255,0,255)}"));
         window->ui->curr_ent_cnt_val->setText(QString::number(aliveEntity));
         window->ui->loc_p_ent_num->setText(QString::number(ci[0].entity));

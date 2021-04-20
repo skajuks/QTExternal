@@ -22,6 +22,12 @@ bool Math::checkForVelocity(const Entity& local_entity)
     return true;
 }
 
+bool Math::equalVector(VECTOR3 source, VECTOR3 compare){
+    if(source.x == compare.x && source.y == compare.y && source.z == compare.z)
+        return true;
+    return false;
+}
+
 VECTOR3 Math::WorldToScreen(const VECTOR3 pos, view_matrix_t* matrix, int width, int height) {
 
     VECTOR3 out;

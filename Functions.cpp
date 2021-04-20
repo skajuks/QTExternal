@@ -14,6 +14,8 @@ int process_id = Memory.getProcess(L"csgo.exe");
 uintptr_t gameModule = Memory.getModule(process_id, L"client.dll");
 uintptr_t engineModule = Memory.getModule(process_id, L"engine.dll");
 uintptr_t engineModulep = Functions::getClientState();
+
+// init offsets from sigs
 Offsets pOffsets = Memory.getOffsets(process_id);
 
 
@@ -53,7 +55,6 @@ void Functions::loadSkybox(const char* skyname){
         strcpy_s(reinterpret_cast<char*>(&Shellcode[13]), 48, skyname);
         Memory.write<BYTE[13 + 48]>(alloc, Shellcode);
         injected = true;
-        printf("changed sky");
     } else {
         WriteProcessMemory(Memory.handle, reinterpret_cast<LPVOID>(alloc + 13), skyname, strlen(skyname) + 1, 0);
     }
@@ -120,8 +121,7 @@ bool Functions::isGameRunning(){
 
     if (pid != 0)
         return true;
-    else
-        return false;
+    return false;
 }
 
 void Functions::sideSpeed(float value) {

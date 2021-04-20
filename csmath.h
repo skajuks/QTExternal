@@ -68,6 +68,7 @@ public:
         z *= fl;
         return *this;
     }
+
     VECTOR3 operator-(const VECTOR3& v) const
     {
         return VECTOR3(x - v.x, y - v.y, z - v.z);
@@ -100,6 +101,7 @@ public:
     static VECTOR3 PlayerAngles();
     static void ClampAngles(float* anglex, float* angley);
     static VECTOR3 Smooth(float smooth, VECTOR3 currentAngle, VECTOR3 aimAngle);
+    static bool equalVector(VECTOR3 source, VECTOR3 compare);
 };
 
 #endif // MATH_H
