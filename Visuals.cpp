@@ -1,7 +1,6 @@
 #include "Visuals.h"
 #include "Functions.h"
 #include "offsets.hpp"
-#include "NetVars.hpp"
 #include "Structs.h"
 #include "paint.h"
 
@@ -130,9 +129,9 @@ static GlowObject setGlowColor(GlowObject glow, int health, uintptr_t entity) {
 }
 
 void Glow::setBrightness() {
-    int ptr = Memory.readMem<int>(engineModule + model_ambient_min);
+    int ptr = Memory.readMem<int>(pOffsets.model_ambient_min);
     int xorptr = *(int*)&brightness ^ ptr;
-    Memory.writeMem<int>(engineModule + model_ambient_min, xorptr);
+    Memory.writeMem<int>(pOffsets.model_ambient_min, xorptr);
 }
 
 void Glow::ProcessEntityTeam(const ClientInfo& ci, uintptr_t glowObject) {
@@ -188,7 +187,7 @@ void Glow::ProcessD3D9Render(const ClientInfo& ci, const Entity& e, int index){
         Memory.readMemTo<player_info>(Memory.readMem<uintptr_t>((items + 0x28) + (index * 0x34)), &player);   // read player struct
 
         view_matrix_t vm;
-        Memory.readMemTo<view_matrix_t>(gameModule + dwViewMatrix, &vm);    // read player viewmatrix
+        Memory.readMemTo<view_matrix_t>(pOffsets.dwViewMatrix, &vm);    // read player viewmatrix
 
         VECTOR3 head = {head.x = e.vecOrigin.x, head.y = e.vecOrigin.y, head.z = e.vecOrigin.z + 75.f};
         VECTOR3 screenpos = Math::WorldToScreen(e.vecOrigin, &vm, Paint::width, Paint::height);
@@ -213,7 +212,7 @@ void Glow::ProcessD3D9Render(const ClientInfo& ci, const Entity& e, int index){
 
             if(weapon_health_enabled){
                 int weaponId = Memory.readMem<int>(ci.entity + m_hActiveWeapon);
-                int weaponEnt = Memory.readMem<int>(gameModule + dwEntityList + ((weaponId & 0xFFF) - 1) * 0x10);
+                int weaponEnt = Memory.readMem<int>(pOffsets.dwEntityList + ((weaponId & 0xFFF) - 1) * 0x10);
                 if(weaponEnt != NULL){
                     int entityWeapon = Memory.readMem<int>(weaponEnt + m_iItemDefinitionIndex);
                     char str[64];

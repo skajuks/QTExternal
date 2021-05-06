@@ -4,6 +4,7 @@
 #include <Dwmapi.h>
 #include "paint.h"
 #include "esp.h"
+#include <thread>
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -44,6 +45,7 @@ int ESP::run()
 
     // Main message loop:
     while (GetMessage(&msg, nullptr, 0, 0)){
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
         TranslateMessage(&msg);
         DispatchMessage(&msg);
 

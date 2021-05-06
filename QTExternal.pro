@@ -16,8 +16,9 @@ SOURCES += \
     Visuals.cpp \
     aimbot.cpp \
     csmath.cpp \
-    fakelag.cpp \
+    localplayer.cpp \
     main.cpp \
+    netvars.cpp \
     paint.cpp
 
 HEADERS += \
@@ -30,7 +31,8 @@ HEADERS += \
     csmath.h \
     entity.h \
     esp.h \
-    fakelag.h \
+    localplayer.h \
+    netvars.h \
     offsets.hpp \
     paint.h \
     stylesheet.h \

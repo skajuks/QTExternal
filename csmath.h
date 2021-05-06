@@ -89,6 +89,7 @@ struct Entity;
 class Math
 {
 public:
+    static float returnVelocity(const Entity& local_entity);
     static float vectorNormalize(VECTOR2& v);
     static void AngleVectors(const VECTOR3& angles, VECTOR2* forward, VECTOR2* right, VECTOR2* up);
     static bool checkForVelocity(const Entity& local_entity);

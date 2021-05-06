@@ -6,6 +6,9 @@
 #include <string>
 #include <iostream>
 
+#define MAX_RENDER_HEIGHT 50
+#define MIN_RENDER_WIDTH 100
+
 using namespace hazedumper::netvars;
 using namespace hazedumper::signatures;
 
@@ -16,9 +19,12 @@ D3DPRESENT_PARAMETERS Paint::d3dparams; //parameters for creating device
 HWND Paint::targetWnd;
 int Paint::width;
 int Paint::height;
+bool esp_master = false;
 
 extern ClientInfo ci[64];  // ci[0] = localplayer
 extern Entity e[64];   // ci[0] = localplayer
+
+extern toggleStateData stateData[6];
 
 int Paint::d3D9Init(HWND hWnd){
 
@@ -70,6 +76,20 @@ void Paint::drawCrosshair(){
     Rect(width / 2 - 3, height / 2 - 3, 6, 6, 0,0,0,0);
 }
 
+void Paint::toggleEspMaster(bool state){
+    esp_master = state;
+}
+
+void Paint::renderEnabledFeatures(){
+    int height_offset = MAX_RENDER_HEIGHT;
+    for(int i = 0; i < 6; i++){
+        StringOutlined((char*)stateData[i].text, MIN_RENDER_WIDTH, height_offset, 255,0,1,0,255,255,255,255);
+        StringOutlined(stateData[i].state ? (char*)"ON" : (char*)"OFF", MIN_RENDER_WIDTH + 100, height_offset, 255,0,1,0,255,stateData[i].state ? 0 : 255 ,stateData[i].state ? 255 : 0 ,0);
+        height_offset += 20;
+    }
+}
+
+
 int Paint::render()
 {
     if (d3dDevice == nullptr)
@@ -78,21 +98,24 @@ int Paint::render()
     d3dDevice->BeginScene();
 
     if (targetWnd == GetForegroundWindow()){
-        int entityIndex = 1;
-        do {
-           if(entityIndex >= 64) break;      // checks only player entities [max = 64]
+        if(esp_master){
+            int entityIndex = 1;
+            do {
+               if(entityIndex >= 64) break;      // checks only player entities [max = 64]
 
-           if(e[entityIndex].health > 0 && e[entityIndex].team != e[0].team){
-               try {
-                   Glow::ProcessD3D9Render(ci[entityIndex], e[entityIndex], entityIndex);
-               }  catch(...) {
-                   continue;
+               if(e[entityIndex].health > 0 && e[entityIndex].team != e[0].team){
+                   try {
+                       Glow::ProcessD3D9Render(ci[entityIndex], e[entityIndex], entityIndex);
+                   }  catch(...) {
+                       continue;
+                   }
+
                }
-
-           }
-        } while(ci[entityIndex++].nextEntity);
+            } while(ci[entityIndex++].nextEntity);
+        }
 
         StringOutlined((char*)watermark.c_str(),5,30,255,0,1,0, 255, 255, 255 ,255);   // watermark
+        renderEnabledFeatures();
         Sleep(1);
     }
 

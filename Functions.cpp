@@ -2,6 +2,7 @@
 #include "offsets.hpp"
 #include "windows.h"
 #include "csmath.h"
+#include "netvars.h"
 #include <TlHelp32.h>
 #include <iostream>
 
@@ -17,7 +18,7 @@ uintptr_t engineModulep = Functions::getClientState();
 
 // init offsets from sigs
 Offsets pOffsets = Memory.getOffsets(process_id);
-
+//netVars pNetVars = NetVars::getAllNetVars();
 
 void Functions::clientCmd_Unrestricted(const char* command){    // Function used to access in-game console commands
     if(!Memory.getAlloc()) return;
@@ -137,7 +138,7 @@ void Functions::setFlashDuration(uintptr_t localPlayer, int duration) {
 }
 
 uintptr_t Functions::getEntity(int index) {
-    return Memory.readMem<uintptr_t>(gameModule + dwEntityList + index * 0x10);
+    return Memory.readMem<uintptr_t>(pOffsets.dwEntityList + index * 0x10);
 }
 
 bool Functions::checkIfScoped(uintptr_t entity) {

@@ -4,6 +4,70 @@
 #include "csmath.h"
 #include <stdint.h>
 
+struct toggleStateData {
+    const char* text;
+    bool state;
+};
+
+
+enum SendPropType
+{
+    DPT_Int = 0,
+    DPT_Float,
+    DPT_Vector,
+    DPT_VectorXY,	// Only encodes the XY of a vector, ignores Z
+    DPT_String,
+    DPT_Array,		// An array of the base types (can't be of datatables).
+    DPT_DataTable,
+    DPT_Int64,
+    DPT_NUMSendPropTypes
+};
+
+struct RecvTable;
+
+struct RecvProp
+{
+    char* m_pVarName;
+    SendPropType m_RecvType;
+    int			m_Flags;
+    int			m_StringBufferSize;
+    bool		m_bInsideArray;
+    const void* m_pExtraData;
+    RecvProp* m_pArrayProp;
+    void* m_ArrayLengthProxy;
+    void* m_ProxyFn;
+    void* m_DataTableProxyFn;
+    RecvTable* m_pDataTable;
+    int			m_Offset;
+    int			m_ElementStride;
+    int			m_nElements;
+
+    // If it's one of the numbered "000", "001", etc properties in an array, then
+    // these can be used to get it's array property name for debugging.
+    const char* m_pParentArrayPropName;
+};
+
+struct RecvTable
+{
+    RecvProp* m_pProps;
+    int			m_nProps;
+    void* m_pDecoder;
+    char* m_pNetTableName;	// The name matched between client and server.
+    bool		m_bInitialized;
+    bool		m_bInMainList;
+};
+
+struct ClientClass
+{
+private:
+    BYTE		vfns[8];
+public:
+    char* m_pNetworkName;
+    RecvTable* m_pRecvTable;
+    ClientClass* m_pNext;
+    int			m_ClassID;
+};
+
 struct aimbotVariables {
     int entityWeapon;
     VECTOR3 recoil;

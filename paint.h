@@ -35,7 +35,8 @@ public:
 
     std::string watermark = "QTExternal v1.2 by chady";
 
-
+    static void renderEnabledFeatures();
+    static void toggleEspMaster(bool state);
     static void String(char* String, int x, int y, int a, int r, int g, int b);
     static void StringOutlined(char* String, int x, int y, int a, int r, int g, int b, int l_a, int l_r, int l_g, int l_b);
     static void Rect( int x, int y, int l, int h, int a, int r, int g, int b);

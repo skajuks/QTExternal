@@ -11,7 +11,6 @@
 #include <thread>                   // fix these damn imports so they are grouped by libs and actual feature headers
 #include <iostream>
 #include "paint.h"
-#include "fakelag.h"
 #include "offsets.hpp"
 #include "Structs.h"
 #include "entity.h"
@@ -26,8 +25,15 @@
 #undef max // C macro for max variable from math.h - have to undef because class::max() would paste macro content at "max" (class:((a)>(b)?(a):(b)))
 #define LEFT_MOUSE_BUTTON 0x01
 
+using namespace hazedumper::netvars;
+using namespace hazedumper::signatures;
+
 ClientInfo ci[64];  // ci[0] = localplayer
 Entity e[64];       // e[0] = localplayer
+toggleStateData stateData[6];
+
+class Glow;
+Paint Paint();
 
 bool  toggleHealthGlow  = false;
 bool  ToggleNoFlash     = false;
@@ -47,39 +53,12 @@ bool  blockbot_enabled  = false;
 bool  blocked           = false;
 bool  door_spammer      = false;
 bool  thirdperson       = false;
+bool  dmexploit         = false;
+bool  esp_master_state  = false;
 const char* skybox_name;
 
-bool disabler = false;
-bool disablel = false;
-
-const char* skybox_array[] = {"cs_baggage_skybox_",
-                              "cs_tibet",
-                              "vietnam",
-                              "sky_lunacy",
-                              "embassy",
-                              "italy",
-                              "jungle",
-                              "office",
-                              "sky_cs15_daylight01_hdr",
-                              "sky_cs15_daylight02_hdr",
-                              "nukeblank",
-                              "sky_venice",
-                              "sky_csgo_cloudy01",
-                              "sky_csgo_night02",
-                              "vertigo",
-                              "vertigoblue_hdr",
-                              "sky_dust",
-                              "sky_hr_aztec"};
-
-float distance_factor = 2.f;
-float trajectory_factor = 0.45f;
 
 extern int aimfov;
-
-using namespace hazedumper::netvars;
-using namespace hazedumper::signatures;
-
-class Glow;
 
 int main(int argc, char** argv) {
     auto app = new QApplication(argc, argv);
@@ -89,6 +68,13 @@ int main(int argc, char** argv) {
     qApp->setStyleSheet(style_sheet);
 
     window->show();
+
+    std::cout << std::hex << pOffsets.dwForceJump - gameModule<< " - " << dwForceJump << std::endl;
+    std::cout << std::hex << pOffsets.dwGlowObjectManager - gameModule << " - " << dwGlowObjectManager << std::endl;
+    std::cout << std::hex << pOffsets.dwEntityList - gameModule<< " - " << dwEntityList << std::endl;
+    std::cout << std::hex << pOffsets.dwLocalPlayer - gameModule<< " - " << dwLocalPlayer << std::endl;
+    std::cout << std::hex << pOffsets.dwClientState << " - " << dwClientState << std::endl;
+    std::cout << std::hex << pOffsets.model_ambient_min << " - " << model_ambient_min << std::endl;
 
     // add bones and entity selector function choices to ui
 
@@ -105,6 +91,12 @@ int main(int argc, char** argv) {
     Glow::setBrightness();
     //Misc::setNightmodeAmount(0.09f);
 
+    std::thread (Misc::miscItemsThreaded, e[0], ci[0]).detach(); // thread for dm invounerability exploit and perfect nade
+
+    //std::thread (Misc::doBlockBot).detach();  // thread used for blockbot
+
+    std::thread(ESP::run).detach();     // d9x9 thread
+
     QTimer *timer = new QTimer(window);
     QObject::connect(timer, &QTimer::timeout, [&](){
 
@@ -115,7 +107,7 @@ int main(int argc, char** argv) {
         int targetIndex = NULL;
         int blockTargetIndex = NULL;
         int aliveEntity = 0;
-        uintptr_t glowObjectManager = Memory.readMem<uintptr_t>(gameModule + dwGlowObjectManager);
+        uintptr_t glowObjectManager = Memory.readMem<uintptr_t>(pOffsets.dwGlowObjectManager);
         aimbotVariables variables;
 
         // Under here goes everything that needs to be updated for every entity except local player
@@ -135,7 +127,6 @@ int main(int argc, char** argv) {
                 aliveEntity++;
 
                 if(e[entityIndex].team == e[0].team){
-                    Glow::ProcessEntityTeam(ci[entityIndex], glowObjectManager);
                     if(blockbot_enabled){
                         float dist = Aim::getClosestEntityByDistance(e[0].vecOrigin, e[entityIndex].vecOrigin);
                         if(!Math::equalVector(e[0].vecOrigin, e[entityIndex].vecOrigin))
@@ -145,10 +136,20 @@ int main(int argc, char** argv) {
 
                             }
                     }
-
+                    Glow::ProcessEntityTeam(ci[entityIndex], glowObjectManager, blockTargetIndex == entityIndex ? 1 : 0);
                 }
                 else {
-                    Glow::ProcessEntityEnemy(ci[entityIndex], e[entityIndex], glowObjectManager);
+
+                    /*if(blockbot_enabled){
+                        float dist = Aim::getClosestEntityByDistance(e[0].vecOrigin, e[entityIndex].vecOrigin);
+                        if(!Math::equalVector(e[0].vecOrigin, e[entityIndex].vecOrigin))
+                            if(dist < bestBlockDist && entityIndex != 0){
+                                bestBlockDist = dist;
+                                blockTargetIndex = entityIndex;
+
+                            }
+                    }*/
+
                     if(toggleAimbot){
                         VECTOR2 newDistance = Aim::getClosestEntity(e[0], ci[entityIndex]);
                         if(newDistance.x < oldx && newDistance.y < oldy && newDistance.x <= aimfov && newDistance.y <= aimfov){
@@ -157,19 +158,14 @@ int main(int argc, char** argv) {
                             targetIndex = entityIndex;
                         }
                     }
+                    Glow::ProcessEntityEnemy(ci[entityIndex], e[entityIndex], glowObjectManager, targetIndex == entityIndex ? 1 : 0);
                 }
             }
         } while(ci[entityIndex++].nextEntity);
 
-        //std::cout << e[0].vecOrigin.x << "  -  " << e[blockTargetIndex].vecOrigin.x << std::endl;
-
-        // Update glow for target entity
-        Glow::ProcessTargetEntity(ci[targetIndex], glowObjectManager);
-        Glow::ProcessTargetEntity(ci[blockTargetIndex], glowObjectManager);
-
         // Under here goes everything that needs to be updated for local player only!
 
-        // blockbot
+        // blockbot      MOVE TO A FUNCTION TO CLEAN UP MAIN
 
         if(blockbot_enabled && GetAsyncKeyState(0x58) && blockTargetIndex){ // x key
             blocked = true;
@@ -189,10 +185,8 @@ int main(int argc, char** argv) {
             Math::vectorNormalize(clRight);
 
             float divider = (svForward.x * svRight.y - svForward.y * svRight.x);
-            if(divider == 0.f){
 
-            }
-            else {
+            if(divider != 0.f){
                 float fmove = -((clForward.x*svRight.y - clForward.y*svRight.x)*450.f) / divider;
                 float smove = ((clForward.x*svForward.y - clForward.y*svForward.x)*450.f) / divider;
 
@@ -241,13 +235,27 @@ int main(int argc, char** argv) {
                 variables = Aim::executeAimbot(ci[targetIndex], e[0], ci[0]);        // execute code only if aimbot is actually enabled
             }
         }
+
+
         // debug section
+
+        // Update stateData struct to display and update toggle states
+
+        stateData[0] = {"Aimbot:", toggleAimbot};
+        stateData[1] = {"Silent aim:", enable_silent};
+        stateData[2] = {"Glow ESP:", Glow::glowEnabled()};
+        stateData[3] = {"Box ESP:", esp_master_state};
+        stateData[4] = {"BunnyHop:", Misc::bhopEnabled()};
+        stateData[5] = {"Head blockbot:", blockbot_enabled};
 
         if(toggleAimbot){
             if(toggle_aimbot_key)
                  window->ui->aimbot_state_ui->setText(QString("AIMBOT ACTIVE [ ARMED ON KEY ]"));
             window->ui->aimbot_state_ui->setText(QString("AIMBOT ACTIVE"));
             window->ui->aimbot_state_ui->setStyleSheet(QString("QLabel{color: rgba(0,255,0,255)}"));
+
+        } else {
+            //Paint::StringOutlined("Aimbot disabled")
         }
 
         window->ui->aimbot_state_ui->setText(QString("AIMBOT ON STANDBY"));
@@ -270,8 +278,6 @@ int main(int argc, char** argv) {
     });
     timer->start(1);
 
-    //std::thread(ESP::run).detach();     // d9x9 thread
-
     return app->exec();
 }
 
@@ -287,7 +293,15 @@ Widget::~Widget()
     delete ui;
 }
 
-void Widget::on_thirdperson_toggle_stateChanged(int arg1){
+void Widget::on_perfect_nade_enable_stateChanged(int arg1){
+    Misc::setPerfectNadeEnabled();
+}
+
+void Widget::on_dm_exploit_enable_stateChanged(int arg1){
+    Misc::setDMExploitEnabled(dmexploit);
+}
+
+void Widget::on_thirdperson_toggle_stateChanged(int arg1){  // doens't work, must be updated in loop
     thirdperson = !thirdperson;
     if(thirdperson)
         Memory.writeMem<int>(ci[0].entity + m_iObserverMode, 1);
@@ -298,11 +312,6 @@ void Widget::on_thirdperson_toggle_stateChanged(int arg1){
 void Widget::on_skybox_list_itemClicked(QListWidgetItem *item){
     skybox_name = item->text().toStdString().c_str();
     Functions::loadSkybox(skybox_name);
-}
-
-
-void Widget::on_skychange_clicked(){
-    Functions::loadSkybox("sky_lunacy");
 }
 
 void Widget::on_testCommand_clicked(){
@@ -365,12 +374,14 @@ void Widget::on_enable_boxes_stateChanged(int arg1)
 
 void Widget::on_esp_enable_stateChanged(int arg1)
 {
-    Glow::StateChanged(1); // esp master
+    esp_master_state = !esp_master_state;
+    Glow::StateChanged(esp_master_state); // esp master
+    Paint::toggleEspMaster(esp_master_state);
 }
 
 void Widget::on_fakelag_slider_valueChanged(int value)
 {
-    FakeLag::setFakelag(value);
+    //FakeLag::setFakelag(value);
     ui->fakelag_val->setText(QString::number(value));
 }
 
@@ -405,18 +416,12 @@ void Widget::on_glowAlpha_valueChanged(double arg1)
 
 void Widget::on_bhop__enable_stateChanged(int arg1)
 {
-    if (Misc::bhopEnabled())
-        Misc::setBhopEnabled(0);
-    else
-        Misc::setBhopEnabled(1);
+    Misc::bhopEnabled() ? Misc::setBhopEnabled(0) : Misc::setBhopEnabled(1);
 }
 
 void Widget::on_glow_enable_stateChanged(int arg1)
 {
-    if (Glow::glowEnabled())
-        Glow::setGlowEnabled(0);
-    else
-        Glow::setGlowEnabled(1);
+    Glow::glowEnabled() ? Glow::setGlowEnabled(0) : Glow::setGlowEnabled(1);
 }
 
 void Widget::on_enemy_chams_stateChanged(int arg1)
@@ -461,7 +466,9 @@ void Widget::on_noflash_enable_stateChanged(int arg1)
     Misc::setEnabledNoFlash(ToggleNoFlash);
 }
 
-void Widget::on_aim_enable_stateChanged(int arg1) { toggleAimbot = !toggleAimbot; }
+void Widget::on_aim_enable_stateChanged(int arg1) {
+    toggleAimbot = !toggleAimbot;
+}
 
 void Widget::on_horizontalSlider_valueChanged(int value)
 {

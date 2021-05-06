@@ -3,6 +3,8 @@
 #include <iostream>
 #include <iomanip>
 #include "Functions.h"
+#include <sstream>
+#include <vector>
 
 MemMan::MemMan()
 {
@@ -117,23 +119,22 @@ MODULEENTRY32 MemMan::getModuleInfo(const char* modName, DWORD pid)
     return module;
 }
 
-uintptr_t MemMan::FindSignature(DWORD start, DWORD size, const char* sig ,const char* mask)
-{
+module GetModule(const wchar_t* moduleName, int id) {
+    HANDLE hmodule = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, id);
+    MODULEENTRY32 mEntry;
+    mEntry.dwSize = sizeof(mEntry);
 
-    BYTE* data = new BYTE[size];
-    SIZE_T bytesRead;
+    do {
+        if (!_wcsicmp(mEntry.szModule, moduleName)) {//_tcscmp
+            CloseHandle(hmodule);
 
-    ReadProcessMemory(handle, (LPVOID)start, data, size, &bytesRead);
-
-    for(uintptr_t i = 0; i< size; i++)
-    {
-        if(MemoryCompare((const BYTE*)(data + i),(const BYTE*)sig, mask)){
-            delete[] data;
-            return start + i;
+            targetModule = { (DWORD)mEntry.hModule, mEntry.modBaseSize };
+            return targetModule;
         }
-    }
-    delete[] data;
-    return NULL;
+    } while (Module32Next(hmodule, &mEntry));
+
+    module mod = { (DWORD64)false, (DWORD64)false };
+    return mod;
 }
 
 int MemMan::findPattern(byte pattern[], std::string mask, int moduleBase, int moduleSize)
@@ -163,63 +164,44 @@ int MemMan::findPattern(byte pattern[], std::string mask, int moduleBase, int mo
     return 0;
 }
 
-uintptr_t MemMan::findPattern(byte pattern[], std::string mask, int moduleBase, int moduleSize, int offset)
-{
-    BYTE* moduleBytes = new BYTE[moduleSize];
-    SIZE_T numBytes = 0;
-
-    if (ReadProcessMemory(handle, (LPCVOID)moduleBase, moduleBytes, (uintptr_t)moduleSize, &numBytes))
-    {
-        for (int i = 0; i < moduleSize; i++)
-        {
-            bool found = true;
-
-            for (size_t l = 0; l < mask.length(); l++)
-            {
-                found = mask[l] == '?' || moduleBytes[l + i] == pattern[l];
-
-                if (!found)
-                    break;
-            }
-
-            if (found)
-                return i + offset;
-        }
+uintptr_t MemMan::generateMask(std::string signature, int moduleBase, int moduleSize){
+    std::vector<byte> temp;
+    std::istringstream iss(signature);
+    std::string s;
+    while(std::getline(iss, s, ' ')){
+       if(s == "?"){
+           temp.push_back(0);
+       } else {
+           temp.push_back(strtoul(s.c_str(), nullptr, 16));
+       }
     }
-    std::cout << "not found" << std::endl;
-    return 0;
-}
 
-
-module GetModule(const wchar_t* moduleName, int id) {
-    HANDLE hmodule = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, id);
-    MODULEENTRY32 mEntry;
-    mEntry.dwSize = sizeof(mEntry);
-
-    do {
-        if (!_wcsicmp(mEntry.szModule, moduleName)) {//_tcscmp
-            CloseHandle(hmodule);
-
-            targetModule = { (DWORD)mEntry.hModule, mEntry.modBaseSize };
-            return targetModule;
-        }
-    } while (Module32Next(hmodule, &mEntry));
-
-    module mod = { (DWORD64)false, (DWORD64)false };
-    return mod;
+    std::string mask;
+    for(auto b : temp) {
+        mask += b ? "x" : "?";
+    }
+    return findPattern(temp.data(), mask, moduleBase, moduleSize);
 }
 
 UINT32 calcXorWithValue(int cvarOffset)
-        {
-            return Memory.readMem<UINT32>(gameModule + cvarOffset) - 0x2C;
-        }
+{
+    return Memory.readMem<UINT32>(gameModule + cvarOffset) - 0x2C;
+}
 
+
+
+/* Offsets and netwars */
 
 Offsets MemMan::getOffsets(int id){
     Offsets pOffsets;
+
+    /* get module base addresses and sizes */
+
     module enginemod = GetModule(L"engine.dll", id);
     module mod = GetModule(L"client.dll", id);
-    pOffsets.dwForceJump = findPattern(new byte[] { 0x8B, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x8B, 0xD6, 0x8B, 0xC1, 0x83, 0xCA, 0x02}, "xx????xxxxxxx", mod.dwBase, mod.dwSize, 0x02);
+
+    // special offsets that cannot be found on hazeddumper
+
     pOffsets.cl_sidespeed = findPattern(new byte[] { 0xF3, 0x0F, 0x10, 0x05, 0x00, 0x00, 0x00, 0x00, 0xF3, 0x0F, 0x11, 0x44, 0x24, 0x00, 0x81, 0x74, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0xD9, 0x44, 0x24, 0x14, 0xEB, 0x07 }, "xxxx????xxxxx?xxx?????xxxxxx", mod.dwBase, mod.dwSize) + 0x4;
     pOffsets.cl_forwardspeed = findPattern(new byte[] { 0xF3, 0x0F, 0x10, 0x05, 0x00, 0x00, 0x00, 0x00, 0xF3, 0x0F, 0x11, 0x44, 0x24, 0x00, 0x81, 0x74, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEB, 0x37 }, "xxxx????xxxxx?xxx?????xx", mod.dwBase, mod.dwSize) + 0x4;
     pOffsets.dwUse = findPattern(new byte[] { 0x8B, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x8B, 0xF2, 0x8B, 0xC1, 0x83, 0xCE, 0x20 }, "xx????xxxxxxx", mod.dwBase, mod.dwSize) + 2;
@@ -232,12 +214,21 @@ Offsets MemMan::getOffsets(int id){
     pOffsets.right = Memory.readMem<uintptr_t>(gameModule + pOffsets.forward + 0x200);
     pOffsets.forward = Memory.readMem<uintptr_t>(gameModule + pOffsets.forward + 0xF5);
 
+    /* general dump of offsets */
+
+    pOffsets.g_pClientClassHead = Memory.readMem<uintptr_t>(gameModule + generateMask("33 DB D3 E0 89 5D F4 09 84 97 ? ? ? ? A1", mod.dwBase, mod.dwSize) + 15);
+    pOffsets.dwForceJump = Memory.readMem<uint32_t>(gameModule + generateMask("8B 0D ? ? ? ? 8B D6 8B C1 83 CA 02", mod.dwBase, mod.dwSize) + 2) + 0;
+    pOffsets.dwGlowObjectManager = Memory.readMem<uint32_t>(gameModule + generateMask("A1 ? ? ? ? A8 01 75 4B", mod.dwBase, mod.dwSize) + 1) + 4;
+    pOffsets.dwEntityList = Memory.readMem<uint32_t>(gameModule + generateMask("BB ? ? ? ? 83 FF 01 0F 8C ? ? ? ? 3B F8", mod.dwBase, mod.dwSize) + 1) + 0;
+    pOffsets.dwLocalPlayer = Memory.readMem<uint32_t>(gameModule + generateMask("8D 34 85 ? ? ? ? 89 15 ? ? ? ? 8B 41 08 8B 48 04 83 F9 FF", mod.dwBase, mod.dwSize) + 3) + 4;
+    pOffsets.dwClientState = Memory.readMem<uint32_t>(engineModule + generateMask("A1 ? ? ? ? 33 D2 6A 00 6A 00 33 C9 89 B0", enginemod.dwBase, enginemod.dwSize) + 1);
+    pOffsets.model_ambient_min = Memory.readMem<uint32_t>(engineModule + generateMask("F3 0F 10 0D ? ? ? ? F3 0F 11 4C 24 ? 8B 44 24 20 35 ? ? ? ? 89 44 24 0C", enginemod.dwBase, enginemod.dwSize) + 4);
+    pOffsets.dwViewMatrix = Memory.readMem<uint32_t>(gameModule + generateMask("0F 10 05 ? ? ? ? 8D 85 ? ? ? ? B9", mod.dwBase, mod.dwSize) + 3) + 176;
+
+    // xorer offsets
 
     pOffsets.xor_cl_sidespeed = calcXorWithValue(pOffsets.cl_sidespeed);
     pOffsets.xor_cl_forwardspeed = calcXorWithValue(pOffsets.cl_forwardspeed);
 
-
-
-    //std::cout << std::hex << pOffsets.loadNamedSkys << std::endl;
     return pOffsets;
 }

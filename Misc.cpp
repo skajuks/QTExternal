@@ -5,6 +5,7 @@
 #include "csmath.h"
 #include <iostream>
 #include <QMessageBox>
+#include <thread>
 
 using namespace hazedumper::netvars;
 using namespace hazedumper::signatures;
@@ -18,7 +19,9 @@ struct customAutoExposure{
 
 customAutoExposure* cAX;
 
-bool bhop_enabled = 1;
+bool bhop_enabled = false;
+bool dmexploit_enabled = false;
+bool perfect_nade = false;
 
 bool toggleNoFlash = false;
 int flashAmmount = 0;
@@ -35,6 +38,54 @@ bool Misc::bhopEnabled(){
 
 void Misc::setBhopEnabled(bool state){
     bhop_enabled = state;
+}
+
+void Misc::setDMExploitEnabled(bool state){
+    dmexploit_enabled = !dmexploit_enabled;
+}
+
+void Misc::setPerfectNadeEnabled(){
+    perfect_nade = !perfect_nade;
+}
+
+void Misc::miscItemsThreaded(const Entity& localPlayer, const ClientInfo& ci){
+    while(1 < 2){
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        if(dmexploit_enabled || perfect_nade){
+
+            if(localPlayer.health <= 0)
+                continue;
+
+            if(dmexploit_enabled){  // execute if player is alive
+                Functions::clientCmd_Unrestricted("open_buymenu");
+                Sleep(500);
+            }
+
+            if(perfect_nade){
+                if(LocalPlayer::getSpeed(localPlayer) > 3)
+                    continue;
+
+                if(Math::PlayerAngles().x != -89)
+                    continue;
+
+                if(LocalPlayer::getActiveWeapon(ci) != 44)  // he nade
+                    continue;
+
+                if((GetAsyncKeyState(0x02) & 0x8000) != 0){
+                    std::this_thread::sleep_for(std::chrono::milliseconds(800));
+                    if(!((GetAsyncKeyState(0x02) & 0x8000) != 0))
+                        continue;
+                    Functions::clientCmd_Unrestricted("+attack");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(80));
+                    Functions::clientCmd_Unrestricted("-attack2");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    Functions::clientCmd_Unrestricted("-attack");
+                }
+            }
+        }
+
+
+    }
 }
 
 void Misc::doBlockBot(float side, float forward){

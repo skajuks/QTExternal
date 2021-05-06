@@ -86,11 +86,13 @@ private slots:
 
     void on_testCommand_clicked();
 
-    void on_skychange_clicked();
-
     void on_skybox_list_itemClicked(QListWidgetItem *item);
 
     void on_thirdperson_toggle_stateChanged(int arg1);
+
+    void on_dm_exploit_enable_stateChanged(int arg1);
+
+    void on_perfect_nade_enable_stateChanged(int arg1);
 
 private:
 

@@ -1363,6 +1363,32 @@
        <string>Block bot [ X ]</string>
       </property>
      </widget>
+     <widget class="QCheckBox" name="dm_exploit_enable">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>320</y>
+        <width>231</width>
+        <height>19</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Deathmatch exploit enable</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="perfect_nade_enable">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>340</y>
+        <width>231</width>
+        <height>19</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Enable perfect nade -98</string>
+      </property>
+     </widget>
     </widget>
    </widget>
    <widget class="QWidget" name="Debug">

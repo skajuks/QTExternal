@@ -14,8 +14,16 @@ struct Offsets{
     int dwUse;
     UINT32 xor_cl_sidespeed;
     UINT32 xor_cl_forwardspeed;
+    //
     uintptr_t dwForceJump;
     uintptr_t dwGlowObjectManager;
+    uintptr_t dwEntityList;
+    uintptr_t dwLocalPlayer;
+    uintptr_t dwClientState;
+    uintptr_t model_ambient_min;
+    uintptr_t dwViewMatrix;
+    //
+    uintptr_t g_pClientClassHead;
     uintptr_t clientCmd_Unrestricted;
     uintptr_t modelInfoClient;
     uintptr_t loadNamedSkys;
@@ -46,7 +54,11 @@ public:
     {
         ReadProcessMemory(handle, (LPBYTE*)addr, readTo, sizeof(*readTo), NULL);
     }
-
+    template <typename T>
+    inline void read(uintptr_t address, T &value)
+    {
+        ReadProcessMemory(handle, reinterpret_cast<LPVOID>(address), &value, sizeof(T), NULL);
+    }
     template <class val>
     val writeMem(uintptr_t addr, val x)
     {
@@ -75,12 +87,11 @@ public:
 	uintptr_t getProcess(const wchar_t*);
 	uintptr_t getModule(uintptr_t, const wchar_t*);
 	uintptr_t getAddress(uintptr_t, std::vector<uintptr_t>);
-    uintptr_t FindSignature(DWORD start, DWORD size, const char* sig ,const char* mask);
     bool MemoryCompare(const BYTE* data, const BYTE* mask, const char* szMask);
     Offsets getOffsets(int id);
     int findPattern(byte pattern[], std::string mask, int moduleBase, int moduleSize);
     MODULEENTRY32 getModuleInfo(const char* modName, DWORD proc_id);
-    uintptr_t findPattern(byte pattern[], std::string mask, int moduleBase, int moduleSize, int offset);
+    uintptr_t generateMask(std::string signature, int moduleBase, int moduleSize);
 private:
 
 

@@ -22,6 +22,11 @@ bool Math::checkForVelocity(const Entity& local_entity)
     return true;
 }
 
+float Math::returnVelocity(const Entity& local_entity){
+    VECTOR3 vel = local_entity.vecVelocity;
+    return (float)sqrt(vel.x * vel.x + vel.y * vel.y);
+}
+
 bool Math::equalVector(VECTOR3 source, VECTOR3 compare){
     if(source.x == compare.x && source.y == compare.y && source.z == compare.z)
         return true;
@@ -163,8 +168,7 @@ VECTOR3 Math::getBoneMatrix(uintptr_t entity, int bone) {
 }
 
 VECTOR3 Math::PlayerAngles(){
-    VECTOR3 angl = Memory.readMem<VECTOR3>(engineModulep + dwClientState_ViewAngles);
-    return angl;
+    return Memory.readMem<VECTOR3>(engineModulep + dwClientState_ViewAngles);
 }
 
 void Math::ClampAngles(float* anglex, float* angley)
@@ -197,5 +201,4 @@ VECTOR3 Math::Smooth(float smooth, VECTOR3 currentAngle, VECTOR3 aimAngle)
     angle = dest;
 
     return angle;
-
 }
