@@ -2,9 +2,10 @@
 
 import urllib.request
 import re
+import pathlib
 
 page = "https://github.com/frk1/hazedumper/blob/master/csgo.cs" # hazedumper gh repo
-timestamp_file = r"F:\Cheats\QTExternal_working\QTExternal\offset_fetch\prev_fetch_time.txt"
+timestamp_file = str(pathlib.Path(__file__).parent.resolve()) + "\prev_fetch_time.txt"
 
 def fetchPreviousUpdateTime():
     with open(timestamp_file, "r+") as file:
