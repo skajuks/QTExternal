@@ -2,23 +2,20 @@
 #include "offsets.hpp"
 #include "windows.h"
 #include "csmath.h"
-#include "netvars.h"
 #include <TlHelp32.h>
 #include <iostream>
-
-using namespace hazedumper::netvars;
-using namespace hazedumper::signatures;
+#include <thread>
 
 MemMan Memory;
+NetVars Netv;
 
 int process_id = Memory.getProcess(L"csgo.exe");
 uintptr_t gameModule = Memory.getModule(process_id, L"client.dll");
 uintptr_t engineModule = Memory.getModule(process_id, L"engine.dll");
 uintptr_t engineModulep = Functions::getClientState();
 
-// init offsets from sigs
-Offsets pOffsets = Memory.getOffsets(process_id);
-//netVars pNetVars = NetVars::getAllNetVars();
+Offsets pOffsets = Memory.getOffsets(process_id); // init offsets from sigs
+netVarStr pNetVars = Netv.dumpNetvars();
 
 void Functions::clientCmd_Unrestricted(const char* command){    // Function used to access in-game console commands
     if(!Memory.getAlloc()) return;
@@ -41,27 +38,6 @@ void Functions::clientCmd_Unrestricted(const char* command){    // Function used
     }
     Memory.createThread(alloc);
 }
-
-void Functions::loadSkybox(const char* skyname){
-    if(!Memory.getAlloc()) return;
-    static uintptr_t alloc = reinterpret_cast<uintptr_t>(Memory.getAlloc()) + 434;//143;      // + clientcmd
-    static bool injected = false;
-    if(!injected){
-        BYTE Shellcode[13 + 48] = { 0xB9, 0x00, 0x00, 0x00, 0x00,	// mov	ecx, (skyname address)
-                                            0xB8, 0x00, 0x00, 0x00, 0x00,	// mov	eax, (R_LoadNamedSkys address)
-                                            0xFF, 0xD0,						// call	eax
-                                            0xC3 };
-        *reinterpret_cast<uintptr_t*>(&Shellcode[1]) = alloc + 13;
-        *reinterpret_cast<uintptr_t*>(&Shellcode[6]) = engineModule + pOffsets.loadNamedSkys;
-        strcpy_s(reinterpret_cast<char*>(&Shellcode[13]), 48, skyname);
-        Memory.write<BYTE[13 + 48]>(alloc, Shellcode);
-        injected = true;
-    } else {
-        WriteProcessMemory(Memory.handle, reinterpret_cast<LPVOID>(alloc + 13), skyname, strlen(skyname) + 1, 0);
-    }
-    Memory.createThread(alloc);
-}
-
 
 void Functions::moveRight(){
     clientCmd_Unrestricted("-moveleft");
@@ -90,11 +66,11 @@ void Functions::moveClearX(){
 }
 
 uintptr_t Functions::getClientState() {
-    return Memory.readMem<uintptr_t>(engineModule + dwClientState);
+    return Memory.readMem<uintptr_t>(engineModule + pOffsets.dwClientState);
 }
 
 bool Functions::isDefusing(uintptr_t entity) {
-    return Memory.readMem<bool>(entity + m_bIsDefusing);
+    return Memory.readMem<bool>(entity + pNetVars.m_bIsDefusing);
 }
 
 bool Functions::isGameRunning(){
@@ -134,7 +110,7 @@ void Functions::forwardSpeed(int value) {
 }
 
 void Functions::setFlashDuration(uintptr_t localPlayer, int duration) {
-    Memory.writeMem<int>(localPlayer + m_flFlashDuration, duration);
+    Memory.writeMem<int>(localPlayer + pNetVars.m_flFlashDuration, duration);
 }
 
 uintptr_t Functions::getEntity(int index) {
@@ -142,7 +118,7 @@ uintptr_t Functions::getEntity(int index) {
 }
 
 bool Functions::checkIfScoped(uintptr_t entity) {
-    return Memory.readMem<bool>(entity + m_bIsScoped);
+    return Memory.readMem<bool>(entity + pNetVars.m_bIsScoped);
 }
 
 char* Functions::getActiveWeapon(int entityWeapon)

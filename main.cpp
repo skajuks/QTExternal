@@ -11,7 +11,7 @@
 #include <thread>                   // fix these damn imports so they are grouped by libs and actual feature headers
 #include <iostream>
 #include "paint.h"
-#include "offsets.hpp"
+#include "offset_fetch\offsets.hpp"   // using pyfetcher
 #include "Structs.h"
 #include "entity.h"
 #include "esp.h"
@@ -22,11 +22,28 @@
 #include "widget.h"
 #include "ui_widget.h"
 
+/*          =-=-=<[ CS:GO external cheat ]>=-=-=
+ *        written by https://www.github.com/skajuks
+ *                      2021
+ *
+ *KNOWN ISSUES:
+ *sendpackets offset not read correctly from memory.
+ *
+ *IDEAS
+ *
+ *Option for flash max value to be changed ( make look legit )
+ *Aimbot working if enemy dormant
+ *Show viewangles of enemy
+ *Can change aim bone
+ *Can switch between teams for blockbot
+ *Non-head blockbot
+ *FakeLag if velocity > 0
+ *Show enemy team on radar
+ *
+*/
+
 #undef max // C macro for max variable from math.h - have to undef because class::max() would paste macro content at "max" (class:((a)>(b)?(a):(b)))
 #define LEFT_MOUSE_BUTTON 0x01
-
-using namespace hazedumper::netvars;
-using namespace hazedumper::signatures;
 
 ClientInfo ci[64];  // ci[0] = localplayer
 Entity e[64];       // e[0] = localplayer
@@ -50,13 +67,17 @@ bool  enable_silent     = false;
 bool  jump_shot         = false;
 bool  toggle_aimbot_key = false;
 bool  blockbot_enabled  = false;
+bool  blockbot_enemy_enabled = false;
 bool  blocked           = false;
 bool  door_spammer      = false;
 bool  thirdperson       = false;
 bool  dmexploit         = false;
 bool  esp_master_state  = false;
+bool  autoaccpet_clicked= false;
+bool  radar_enabled     = false;
+bool  fakelag_enabled   = false;
 const char* skybox_name;
-
+//const char* spectators[] = {};
 
 extern int aimfov;
 
@@ -69,18 +90,13 @@ int main(int argc, char** argv) {
 
     window->show();
 
-    std::cout << std::hex << pOffsets.dwForceJump - gameModule<< " - " << dwForceJump << std::endl;
-    std::cout << std::hex << pOffsets.dwGlowObjectManager - gameModule << " - " << dwGlowObjectManager << std::endl;
-    std::cout << std::hex << pOffsets.dwEntityList - gameModule<< " - " << dwEntityList << std::endl;
-    std::cout << std::hex << pOffsets.dwLocalPlayer - gameModule<< " - " << dwLocalPlayer << std::endl;
-    std::cout << std::hex << pOffsets.dwClientState << " - " << dwClientState << std::endl;
-    std::cout << std::hex << pOffsets.model_ambient_min << " - " << model_ambient_min << std::endl;
-
+    std::cout << std::hex << pOffsets.dwbSendPackets << " - "  << pyfetcher::dwbSendPackets << std::endl;
     // add bones and entity selector function choices to ui
 
     for(auto item: skybox_array){
         window->ui->skybox_list->addItem(QString(item));
     }
+
     window->ui->aimbot_calc->addItems({"Angle fov", "Distance", "Crosshair fov"});
     window->ui->aimbot_calc->setCurrentRow(0);
     window->ui->aimBonesList->addItems({"8 - head", "6 - upper chest", "5 - lower chest", "9 - neck", "2 - pelvis"});
@@ -88,14 +104,17 @@ int main(int argc, char** argv) {
 
     // here goes static features that doesn't need updates
 
-    Glow::setBrightness();
+    //Glow::setBrightness();
+
     //Misc::setNightmodeAmount(0.09f);
+
+    //std::thread(ESP::run).detach();     // d9x9 thread
 
     std::thread (Misc::miscItemsThreaded, e[0], ci[0]).detach(); // thread for dm invounerability exploit and perfect nade
 
-    //std::thread (Misc::doBlockBot).detach();  // thread used for blockbot
+    //std::thread (Misc::fakeLagThreaded, e[0], fakelag_enabled).detach();  // thread used for fakelag
 
-    std::thread(ESP::run).detach();     // d9x9 thread
+
 
     QTimer *timer = new QTimer(window);
     QObject::connect(timer, &QTimer::timeout, [&](){
@@ -112,14 +131,14 @@ int main(int argc, char** argv) {
 
         // Under here goes everything that needs to be updated for every entity except local player
 
-        Memory.readMemTo<ClientInfo>(gameModule + dwLocalPlayer, &ci[0]);
+        Memory.readMemTo<ClientInfo>(pOffsets.dwLocalPlayer, &ci[0]);
         Memory.readMemTo<Entity>(ci[0].entity, &e[0]);
 
         do {
 
             if(entityIndex >= 64) break;
 
-            Memory.readMemTo<ClientInfo>(gameModule + dwEntityList + entityIndex * 0x10, &ci[entityIndex]);
+            Memory.readMemTo<ClientInfo>(pOffsets.dwEntityList + entityIndex * 0x10, &ci[entityIndex]);
             Memory.readMemTo<Entity>(ci[entityIndex].entity, &e[entityIndex]);
 
             if(e[entityIndex].health > 0 && ci[entityIndex].entity) { // checks if entity exists and is alive
@@ -127,8 +146,14 @@ int main(int argc, char** argv) {
                 aliveEntity++;
 
                 if(e[entityIndex].team == e[0].team){
+
+                    //if(Memory.readMem<uintptr_t>(ci[entityIndex].entity + pNetVars.m_hObserverTarget) != ci[0].entity){
+                        //player_info pInfo;
+                        //Memoryt.read<player_info>(ci[entityIndex].entity)
+                    //}
+
                     if(blockbot_enabled){
-                        float dist = Aim::getClosestEntityByDistance(e[0].vecOrigin, e[entityIndex].vecOrigin);
+                        float dist = Aim::getClosestEntityByDistance(e[0].vecOrigin, e[entityIndex].vecOrigin);     //add toggle for enemy team
                         if(!Math::equalVector(e[0].vecOrigin, e[entityIndex].vecOrigin))
                             if(dist < bestBlockDist && entityIndex != 0){
                                 bestBlockDist = dist;
@@ -140,7 +165,10 @@ int main(int argc, char** argv) {
                 }
                 else {
 
-                    /*if(blockbot_enabled){
+                    if(radar_enabled)
+                        Memory.writeMem<bool>(ci[0].entity + pNetVars.m_bSpotted, true);    // make this look nicer :)
+
+                    /*if(blockbot_enabled){   // move to a thread!!!!!
                         float dist = Aim::getClosestEntityByDistance(e[0].vecOrigin, e[entityIndex].vecOrigin);
                         if(!Math::equalVector(e[0].vecOrigin, e[entityIndex].vecOrigin))
                             if(dist < bestBlockDist && entityIndex != 0){
@@ -152,6 +180,7 @@ int main(int argc, char** argv) {
 
                     if(toggleAimbot){
                         VECTOR2 newDistance = Aim::getClosestEntity(e[0], ci[entityIndex]);
+                        //std::cout << "d " << newDistance.x << ", " << newDistance.y << '\n';
                         if(newDistance.x < oldx && newDistance.y < oldy && newDistance.x <= aimfov && newDistance.y <= aimfov){
                             oldx = newDistance.x;
                             oldy = newDistance.y;
@@ -167,7 +196,7 @@ int main(int argc, char** argv) {
 
         // blockbot      MOVE TO A FUNCTION TO CLEAN UP MAIN
 
-        if(blockbot_enabled && GetAsyncKeyState(0x58) && blockTargetIndex){ // x key
+        if((blockbot_enabled || blockbot_enemy_enabled) && GetAsyncKeyState(0x58) && blockTargetIndex){ // x key
             blocked = true;
             VECTOR3 currentAngle = Math::PlayerAngles();
             VECTOR3 bestPos = e[blockTargetIndex].vecOrigin - e[0].vecOrigin;
@@ -203,7 +232,7 @@ int main(int argc, char** argv) {
             }
         }
 
-        if(blocked && blockbot_enabled && !GetAsyncKeyState(0x58)){
+        if(blocked && (blockbot_enabled || blockbot_enemy_enabled) && !GetAsyncKeyState(0x58)){
             Memory.write<int8_t>(pOffsets.right, 4);
             Memory.write<int8_t>(pOffsets.forward, 4);
             Memory.write<int8_t>(pOffsets.back, 4);
@@ -236,7 +265,6 @@ int main(int argc, char** argv) {
             }
         }
 
-
         // debug section
 
         // Update stateData struct to display and update toggle states
@@ -268,6 +296,8 @@ int main(int argc, char** argv) {
         window->ui->curr_tgt->setText(QString::number(targetIndex));
         window->ui->dist_x->setText(QString::number(oldx));
         window->ui->dist_y->setText(QString::number(oldy));
+        window->ui->enable_autoaccept->setText(QString(Misc::returnAutoAcceptState() ? "Accepting match" : "Enable autoaccept"));
+        window->ui->enable_autoaccept->setStyleSheet(QString(Misc::returnAutoAcceptState() ? "QPushButton{background-color: lime}" : "QPushButton{background-color: blue}"));
         window->ui->ent_recoil->setText(QString(QString::number(variables.recoil.x) + " : " + QString::number(variables.recoil.y) + " : " +
                                                 QString::number(variables.recoil.z)));
 
@@ -293,6 +323,23 @@ Widget::~Widget()
     delete ui;
 }
 
+void Widget::on_enable_radio_stateChanged(int arg1){
+    Misc::setRadioSpamEnabled();
+}
+
+void Widget::on_fakelag_enable_stateChanged(int arg1){
+    fakelag_enabled = !fakelag_enabled;
+}
+
+void Widget::on_radar_enable_stateChanged(int arg1){
+    radar_enabled = !radar_enabled;
+}
+
+void Widget::on_enable_autoaccept_clicked(){
+    autoaccpet_clicked = true;
+    Misc::setAutoAcceptEnabled();
+}
+
 void Widget::on_perfect_nade_enable_stateChanged(int arg1){
     Misc::setPerfectNadeEnabled();
 }
@@ -303,10 +350,10 @@ void Widget::on_dm_exploit_enable_stateChanged(int arg1){
 
 void Widget::on_thirdperson_toggle_stateChanged(int arg1){  // doens't work, must be updated in loop
     thirdperson = !thirdperson;
-    if(thirdperson)
-        Memory.writeMem<int>(ci[0].entity + m_iObserverMode, 1);
-    else
-        Memory.writeMem<int>(ci[0].entity + m_iObserverMode, 0);
+    //if(thirdperson)
+        //Memory.writeMem<int>(ci[0].entity + m_iObserverMode, 1);
+    //else
+        //Memory.writeMem<int>(ci[0].entity + m_iObserverMode, 0);
 }
 
 void Widget::on_skybox_list_itemClicked(QListWidgetItem *item){
@@ -399,13 +446,8 @@ void Widget::on_chams_bright_slider_valueChanged(int value)
 
 void Widget::on_fov_slider_valueChanged(int value)
 {
-    //Misc::changeFov(value);
+    Misc::changeFov(ci[0], value);
     ui->player_fov_val->setText(QString::number(value));
-}
-
-void Widget::on_Flashvalue_valueChanged(double arg1)
-{
-    flashAmount = (int)arg1;
 }
 
 void Widget::on_glowAlpha_valueChanged(double arg1)

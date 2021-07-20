@@ -18,8 +18,8 @@ public:
     static void StateChanged(int funct);
     static void colorChanged(int funct, int a, int r, int g, int b);
     static void setBrightness();
-    static void ProcessEntityEnemy(const ClientInfo& ci, const Entity& e, uintptr_t glowObject);
-    static void ProcessEntityTeam(const ClientInfo& ci, uintptr_t glowObject);
+    static void ProcessEntityEnemy(const ClientInfo& ci, const Entity& e, uintptr_t glowObject, int targetindex);
+    static void ProcessEntityTeam(const ClientInfo& ci, uintptr_t glowObject, int targetindex);
     static void ProcessD3D9Render(const ClientInfo& ci, const Entity& e, int index);
     static void ProcessTargetEntity(const ClientInfo& ci, uintptr_t glowObject);
 };

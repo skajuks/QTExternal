@@ -5,10 +5,6 @@
 #include "Functions.h"
 #include "Structs.h"
 
-using namespace hazedumper::netvars;
-using namespace hazedumper::signatures;
-
-
 class LocalPlayer
 {
 public:

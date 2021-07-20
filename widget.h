@@ -47,8 +47,6 @@ private slots:
 
     void on_glowAlpha_valueChanged(double arg1);
 
-    void on_Flashvalue_valueChanged(double arg1);
-
     void on_chams_bright_slider_valueChanged(int value);
 
     void on_team_chams_stateChanged(int arg1);
@@ -93,6 +91,14 @@ private slots:
     void on_dm_exploit_enable_stateChanged(int arg1);
 
     void on_perfect_nade_enable_stateChanged(int arg1);
+
+    void on_enable_autoaccept_clicked();
+
+    void on_radar_enable_stateChanged(int arg1);
+
+    void on_fakelag_enable_stateChanged(int arg1);
+
+    void on_enable_radio_stateChanged(int arg1);
 
 private:
 

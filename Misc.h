@@ -21,10 +21,19 @@ static const char* skybox_array[] = {"cs_baggage_skybox_",
                               "sky_dust",
                               "sky_hr_aztec"};
 
+static const char* radio_commands[11] = {"getout", "enemydown", "enemyspot", "needbackup",
+                                      "takingfire", "regroup", "sticktog", "go", "coverme",
+                                      "cheer", "roger"};
+
 
 class Misc
 {
 public:
+    static void setRadioSpamEnabled();
+    static void fakeLagThreaded(const Entity& localPlayer, bool toggle);
+    static bool returnAutoAcceptState();
+    static void setAutoAcceptEnabled();
+    static bool autoAccept();
     static void setBhop(const Entity& local_entity);
     static bool bhopEnabled();
     static void setBhopEnabled(bool state);

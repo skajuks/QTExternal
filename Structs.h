@@ -9,7 +9,6 @@ struct toggleStateData {
     bool state;
 };
 
-
 enum SendPropType
 {
     DPT_Int = 0,
@@ -23,49 +22,62 @@ enum SendPropType
     DPT_NUMSendPropTypes
 };
 
-struct RecvTable;
+struct RecvTable; // forward define for recvprop
 
 struct RecvProp
 {
-    char* m_pVarName;
-    SendPropType m_RecvType;
-    int			m_Flags;
-    int			m_StringBufferSize;
-    bool		m_bInsideArray;
-    const void* m_pExtraData;
-    RecvProp* m_pArrayProp;
-    void* m_ArrayLengthProxy;
-    void* m_ProxyFn;
-    void* m_DataTableProxyFn;
-    RecvTable* m_pDataTable;
-    int			m_Offset;
-    int			m_ElementStride;
-    int			m_nElements;
+    char*               m_pVarName;
+    SendPropType        m_RecvType;
+    int                 m_Flags;
+    int                 m_StringBufferSize;
+    bool                m_bInsideArray;
+    const void*         m_pExtraData;
+    RecvProp*           m_pArrayProp;
+    void*               m_ArrayLengthProxy;
+    void*               m_ProxyFn;
+    void*               m_DataTableProxyFn;
+    RecvTable*          m_pDataTable;
+    int                 m_Offset;
+    int                 m_ElementStride;
+    int                 m_nElements;
 
     // If it's one of the numbered "000", "001", etc properties in an array, then
     // these can be used to get it's array property name for debugging.
-    const char* m_pParentArrayPropName;
+    const char*         m_pParentArrayPropName;
 };
 
 struct RecvTable
 {
-    RecvProp* m_pProps;
+    RecvProp*   m_pProps;
     int			m_nProps;
-    void* m_pDecoder;
-    char* m_pNetTableName;	// The name matched between client and server.
+    void*       m_pDecoder;
+    char*       m_pNetTableName;	// The name matched between client and server.
     bool		m_bInitialized;
     bool		m_bInMainList;
 };
 
 struct ClientClass
 {
-private:
-    BYTE		vfns[8];
-public:
-    char* m_pNetworkName;
-    RecvTable* m_pRecvTable;
-    ClientClass* m_pNext;
-    int			m_ClassID;
+    void*           m_pCreateFn;
+    void*           m_pCreateEventFn;
+    char*           m_pNetworkName;
+    RecvTable*      m_pRecvTable;
+    ClientClass*    m_pNext;
+    int             m_ClassID;
+};
+
+struct IBaseClientDLL
+{
+    virtual void fn0() = 0;
+    virtual void fn1() = 0;
+    virtual void fn2() = 0;
+    virtual void fn3() = 0;
+    virtual void fn4() = 0;
+    virtual void fn5() = 0;
+    virtual void fn6() = 0;
+    virtual void fn7() = 0;
+
+    virtual ClientClass* getAllClasses() = 0;
 };
 
 struct aimbotVariables {
@@ -107,7 +119,7 @@ struct CVerifiedUserCmd {
 };
 
 struct GlowObject {
-    BYTE _filler0[4];
+    BYTE _filler0[8];
     float red;
     float green;
     float blue;
@@ -116,6 +128,24 @@ struct GlowObject {
     bool renderWhenOccluded;
     bool renderWhenUnoccluded;
 };
+
+/*struct GlowObjectDefinition_t
+{
+  int m_nNextFreeSlot;
+  C_BaseEntity* m_pEntity;
+  Vector m_vGlowColor;
+  float m_flGlowAlpha;
+  bool m_bGlowAlphaCappedByRenderAlpha;
+  float m_flGlowAlphaFunctionOfMaxVelocity;
+  float m_flGlowAlphaMax;
+  float m_flGlowPulseOverdrive;
+  bool m_bRenderWhenOccluded;
+  bool m_bRenderWhenUnoccluded;
+  bool m_bFullBloomRender;
+  int m_nFullBloomStencilTestValue;
+  int m_nRenderStyle;
+  int m_nSplitScreenSlot;
+};*/
 
 struct Chams {
     BYTE red;

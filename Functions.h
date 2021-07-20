@@ -7,7 +7,9 @@ extern int process_id;
 extern uintptr_t gameModule;
 extern uintptr_t engineModule;
 extern uintptr_t engineModulep;
+
 extern Offsets pOffsets;
+extern netVarStr pNetVars;
 
 class Functions{
 public:

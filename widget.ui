@@ -1056,6 +1056,19 @@
         <string>ESPbox shows health</string>
        </property>
       </widget>
+      <widget class="QCheckBox" name="radar_enable">
+       <property name="geometry">
+        <rect>
+         <x>180</x>
+         <y>160</y>
+         <width>231</width>
+         <height>19</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>View enemies on radar</string>
+       </property>
+      </widget>
      </widget>
     </widget>
    </widget>
@@ -1114,7 +1127,7 @@
        <string>Thirdperson</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="noflash_enable_3">
+     <widget class="QCheckBox" name="fakelag_enable">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -1183,19 +1196,6 @@
        <string> Set keybind: </string>
       </property>
      </widget>
-     <widget class="QLabel" name="label_9">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>130</y>
-        <width>121</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Set max flash value</string>
-      </property>
-     </widget>
      <widget class="QLabel" name="label_10">
       <property name="geometry">
        <rect>
@@ -1207,16 +1207,6 @@
       </property>
       <property name="text">
        <string>Set nightmode darkness</string>
-      </property>
-     </widget>
-     <widget class="QDoubleSpinBox" name="Flashvalue">
-      <property name="geometry">
-       <rect>
-        <x>260</x>
-        <y>130</y>
-        <width>62</width>
-        <height>21</height>
-       </rect>
       </property>
      </widget>
      <widget class="QLabel" name="label_13">
@@ -1387,6 +1377,19 @@
       </property>
       <property name="text">
        <string>Enable perfect nade -98</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="enable_radio">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>360</y>
+        <width>231</width>
+        <height>19</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Spam radio commands</string>
       </property>
      </widget>
     </widget>
@@ -1740,6 +1743,24 @@ border-radius: 5px;
     </property>
     <property name="text">
      <string>Apply selected skybox</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="enable_autoaccept">
+    <property name="geometry">
+     <rect>
+      <x>173</x>
+      <y>142</y>
+      <width>141</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(0, 100, 220);
+border-radius: 5px;
+</string>
+    </property>
+    <property name="text">
+     <string>Enable autoaccept</string>
     </property>
    </widget>
   </widget>

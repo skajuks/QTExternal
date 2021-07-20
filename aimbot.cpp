@@ -1,6 +1,6 @@
 #include "aimbot.h"
 #include "Functions.h"
-#include "offsets.hpp"
+#include "offset_fetch\offsets.hpp"
 #include "csmath.h"
 
 
@@ -16,10 +16,6 @@
         add closest entity by fov
         add triggerbot
 */
-
-
-using namespace hazedumper::signatures;
-using namespace hazedumper::netvars;
 
 int bone_int = 8;
 int aimfov = 20;
@@ -54,13 +50,13 @@ void doSilentAim(VECTOR2 angles, bool CanShoot){
     CInput Input;
     DWORD clientState;
 
-    Input = Memory.readMem<CInput>(gameModule + dwInput);
+    Input = Memory.readMem<CInput>(pOffsets.dwInput);
     clientState = Functions::getClientState();
 
-    Memory.writeMem<BYTE>(engineModule + dwbSendPackets, 0); //disable packet send
+    Memory.writeMem<BYTE>(engineModule + pyfetcher::dwbSendPackets, 0); //disable packet send
 
     int desiredCMD;
-    desiredCMD = Memory.readMem<int>(clientState + clientstate_last_outgoing_command);
+    desiredCMD = Memory.readMem<int>(clientState + pOffsets.clientstate_last_outgoing_command);
     desiredCMD += 2; // +2 for incomming one
 
     DWORD incommingUserCMD = Input.Commands + (desiredCMD % 150) * sizeof(CUserCmd);
@@ -83,7 +79,7 @@ void doSilentAim(VECTOR2 angles, bool CanShoot){
     Memory.writeMemFrom<CUserCmd>(currentUserCMD, &cmd);
     Memory.writeMemFrom<CUserCmd>(verifiedCurUserCMD, &cmd);
 
-    Memory.writeMem<BYTE>(engineModule + dwbSendPackets, 1); //restore packet sending :)
+    Memory.writeMem<BYTE>(engineModule + pyfetcher::dwbSendPackets, 1); //restore packet sending :)
 }
 
 int noAimbotEntityArray[] = {41,42,43,44,45,46,47,48,49,57,59};
@@ -94,32 +90,6 @@ bool in_array(const int store[], const int storeSize, const int querry){
             return true;
     }
     return false;
-}
-
-ClientInfo* Aim::getClosestTeammate(Entity* localPlayer, ClientInfo* pEntity){
-
-    // use this to get closest team entity for blockbot
-
-    float oldDistancex = std::numeric_limits<float>::max();;
-    float oldDistancey = std::numeric_limits<float>::max();;
-    ClientInfo* target;
-
-    VECTOR3 entBone = Math::getBoneMatrix(pEntity->entity, bone_int);
-    VECTOR3 pAngle = Math::PlayerAngles();
-    pAngle.z = localPlayer->vecViewOffset.z;    // pAngle.z = Memory.readMem<float>(localPlayer + m_vecViewOffset + 0x8);
-    localPlayer->vecOrigin.z += pAngle.z;
-
-    VECTOR3 angleTo = Math::CalcAngle(localPlayer->vecOrigin, entBone);
-    auto newDistance = Math::CalcDistance(pAngle.x, pAngle.y, angleTo.x, angleTo.y);
-
-    if(newDistance.x < oldDistancex && newDistance.y < oldDistancey){
-        oldDistancex = newDistance.x;
-        oldDistancey = newDistance.y;
-        target = pEntity;
-    }
-    if(target)
-        return target;
-    return NULL;
 }
 
 float Aim::getClosestEntityByDistance(const Entity &Entity_local, const Entity &Entity_target){
@@ -146,12 +116,11 @@ VECTOR2 Aim::getClosestEntity(const Entity &Entity_local, const ClientInfo &ci){
     VECTOR3 vecOrigin = Entity_local.vecOrigin;
     VECTOR3 entBone = Math::getBoneMatrix(ci.entity, bone_int);
     VECTOR3 pAngle = Math::PlayerAngles();
-    pAngle.z = Entity_local.vecViewOffset.z;    // pAngle.z = Memory.readMem<float>(localPlayer + m_vecViewOffset + 0x8);
+    pAngle.z = Entity_local.vecViewOffset.z;
     vecOrigin.z += pAngle.z;
 
     VECTOR3 angleTo = Math::CalcAngle(vecOrigin, entBone);
     VECTOR2 finalAngle = Math::CalcDistance(pAngle.x, pAngle.y, angleTo.x, angleTo.y);
-    //printf("FINAL_ANGLE = %f %f\n", finalAngle.x ,finalAngle.y);
     return finalAngle;
 }
 
@@ -159,12 +128,12 @@ aimbotVariables Aim::executeAimbot(const ClientInfo &target, const Entity &Entit
     int entityWeapon;
     aimbotVariables variables;
 
-    VECTOR3 recoil = Memory.readMem<VECTOR3>(local_ci.entity + m_aimPunchAngle);   // gets recoil vector and counteracts it
+    VECTOR3 recoil = Memory.readMem<VECTOR3>(local_ci.entity + pNetVars.m_aimPunchAngle);   // gets recoil vector and counteracts it
     recoil *= (recoil_perc / 90.f) * 2.f;
 
-    int weaponEnt = Memory.readMem<int>(gameModule + dwEntityList + ((Memory.readMem<int>(local_ci.entity + m_hActiveWeapon) & 0xFFF) - 1) * 0x10);
+    int weaponEnt = Memory.readMem<int>(pOffsets.dwEntityList + ((Memory.readMem<int>(local_ci.entity + pNetVars.m_hActiveWeapon) & 0xFFF) - 1) * 0x10);
     if(weaponEnt){
-        entityWeapon = Memory.readMem<int>(weaponEnt + m_iItemDefinitionIndex);     // gets weapon entity ID, currently returns 0 [ recheck ]
+        entityWeapon = Memory.readMem<int>(weaponEnt + pNetVars.m_iItemDefinitionIndex);     // gets weapon entity ID, currently returns 0 [ recheck ]
     }
     VECTOR3 vecOrigin = Entity_local.vecOrigin;
     VECTOR3 pAngle = Math::PlayerAngles();
@@ -180,7 +149,7 @@ aimbotVariables Aim::executeAimbot(const ClientInfo &target, const Entity &Entit
             if(enable_silentaim)
                 doSilentAim(readyAngles, true);
             else
-               Memory.writeMem<VECTOR2>(engineModulep + dwClientState_ViewAngles, readyAngles);
+               Memory.writeMem<VECTOR2>(Functions::getClientState() + pOffsets.dwClientState_ViewAngles, readyAngles);
 
     }
     variables.entityWeapon = entityWeapon;

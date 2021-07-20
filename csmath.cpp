@@ -9,10 +9,6 @@
 #include <limits>
 #include "Structs.h" // lai header fwd decl dabu defu Entity
 
-using namespace hazedumper::netvars;
-using namespace hazedumper::signatures;
-
-
 bool Math::checkForVelocity(const Entity& local_entity)
 {
     VECTOR3 vel = local_entity.vecVelocity;
@@ -131,9 +127,6 @@ void Math::AngleVectors(const VECTOR3& angles, VECTOR2* forward, VECTOR2* right,
     }
 }
 
-
-
-
 VECTOR3 Math::CalcAngle(VECTOR3 src, VECTOR3 dst)
 {
     VECTOR3 angles;
@@ -154,12 +147,8 @@ VECTOR3 Math::CalcAngle(VECTOR3 src, VECTOR3 dst)
     return angles;
 }
 
-VECTOR3 Math::PlayerPos(uintptr_t entity){
-    return Memory.readMem<VECTOR3>(entity + m_vecOrigin);
-}
-
 VECTOR3 Math::getBoneMatrix(uintptr_t entity, int bone) {
-    uintptr_t bones = Memory.readMem<uintptr_t>(entity + m_dwBoneMatrix);
+    uintptr_t bones = Memory.readMem<uintptr_t>(entity + pNetVars.m_dwBoneMatrix);
     VECTOR3 boneMatrix;
     boneMatrix.x = Memory.readMem<float>(bones + 0x30 * bone + 0xC);    // struct plzzzz
     boneMatrix.y = Memory.readMem<float>(bones + 0x30 * bone + 0x1C);
@@ -168,7 +157,7 @@ VECTOR3 Math::getBoneMatrix(uintptr_t entity, int bone) {
 }
 
 VECTOR3 Math::PlayerAngles(){
-    return Memory.readMem<VECTOR3>(engineModulep + dwClientState_ViewAngles);
+    return Memory.readMem<VECTOR3>(Functions::getClientState() + pOffsets.dwClientState_ViewAngles);
 }
 
 void Math::ClampAngles(float* anglex, float* angley)

@@ -18,7 +18,6 @@ SOURCES += \
     csmath.cpp \
     localplayer.cpp \
     main.cpp \
-    netvars.cpp \
     paint.cpp
 
 HEADERS += \
@@ -32,7 +31,6 @@ HEADERS += \
     entity.h \
     esp.h \
     localplayer.h \
-    netvars.h \
     offsets.hpp \
     paint.h \
     stylesheet.h \

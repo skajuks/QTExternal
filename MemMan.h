@@ -3,6 +3,8 @@
 #include <vector>
 #include <TlHelp32.h>
 #include <iostream>
+#include "Structs.h"
+#include "offsets.hpp"
 
 struct module{
     DWORD dwBase, dwSize;
@@ -22,8 +24,18 @@ struct Offsets{
     uintptr_t dwClientState;
     uintptr_t model_ambient_min;
     uintptr_t dwViewMatrix;
+    uintptr_t dwbSendPackets;
+    uintptr_t dwInput;
+    uintptr_t clientstate_last_outgoing_command;
+    uintptr_t dwClientState_PlayerInfo;
+    uintptr_t dwClientState_ViewAngles;
     //
+    uintptr_t offsetClientState;
+    uintptr_t m_flNextCmdTime;
+    uintptr_t g_bVoiceRecording;
     uintptr_t g_pClientClassHead;
+    uintptr_t Callback__IsReady;
+    uintptr_t ConfirmedReservationCallback;
     uintptr_t clientCmd_Unrestricted;
     uintptr_t modelInfoClient;
     uintptr_t loadNamedSkys;
@@ -80,8 +92,6 @@ public:
 
     HANDLE handle;
 
-
-
     void createThread(uintptr_t address, LPVOID param = 0);
     LPVOID getAlloc();
 	uintptr_t getProcess(const wchar_t*);
@@ -95,4 +105,37 @@ public:
 private:
 
 
+};
+
+struct netVarStr{
+    uintptr_t m_clrRender;
+    uintptr_t m_iTeamNum;
+    uintptr_t m_vecOrigin;
+    uintptr_t m_nModelIndex;
+    uintptr_t m_pBones;
+    uintptr_t m_bGunGameImmunity;
+    uintptr_t m_bHasDefuser;
+    uintptr_t m_bIsDefusing;
+    uintptr_t m_bIsScoped;
+    uintptr_t m_bSpottedByMask;
+    uintptr_t m_flCustomAutoExposureMax;
+    uintptr_t m_flCustomAutoExposureMin;
+    uintptr_t m_hActiveWeapon;
+    uintptr_t m_iGlowIndex;
+    uintptr_t m_iItemDefinitionIndex;
+    uintptr_t m_flFlashDuration;
+    uintptr_t m_dwBoneMatrix;
+    uintptr_t m_aimPunchAngle;
+    uintptr_t m_iDefaultFOV;
+    uintptr_t m_hObserverTarget;
+    uintptr_t m_bSpotted;
+};
+
+class NetVars : public MemMan
+{
+public:
+    netVarStr dumpNetvars();
+    RecvTable* getTable(const char* name);
+    int getProp(RecvTable* pTable, const char* name);
+    int getOffset(const char* table_name, const char* var_name);
 };

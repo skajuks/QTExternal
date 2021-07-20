@@ -3,7 +3,6 @@
 class Aim
 {
 public:
-    static ClientInfo* getClosestTeammate(Entity* localPlayer, ClientInfo* pEntity);
     static void getClosestEnemyByAngle(Entity* Entity, ClientInfo* pEntity);
     static void AIMBOT();
     static void toggleAimbotOnKey(bool state);

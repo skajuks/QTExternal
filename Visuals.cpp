@@ -4,9 +4,6 @@
 #include "Structs.h"
 #include "paint.h"
 
-using namespace hazedumper::netvars;
-using namespace hazedumper::signatures;
-
 Chams clr_team = {255,255,0};
 Chams clr_enemy = {0,255,255};
 
@@ -106,7 +103,7 @@ void Glow::setGlowTeamColor(int r, int g, int b, bool lPlayerTeam){
     }
 }
 
-static GlowObject setGlowColor(GlowObject glow, int health, uintptr_t entity) {
+static GlowObject setGlowColor(GlowObject glow, int health, uintptr_t entity, int targetindex) {
     if (Functions::isDefusing(entity)) {
         glow.red = 255;
         glow.blue = 255;
@@ -121,6 +118,11 @@ static GlowObject setGlowColor(GlowObject glow, int health, uintptr_t entity) {
             glow.green = ETeamG;
             glow.blue = ETeamB;
         }
+        if(targetindex != 0){
+            glow.red = 255;
+            glow.green = 255;
+            glow.blue = 0;
+        }
     }
     glow.alpha = alpha;
     glow.renderWhenOccluded = true;
@@ -134,37 +136,42 @@ void Glow::setBrightness() {
     Memory.writeMem<int>(pOffsets.model_ambient_min, xorptr);
 }
 
-void Glow::ProcessEntityTeam(const ClientInfo& ci, uintptr_t glowObject) {
+void Glow::ProcessEntityTeam(const ClientInfo& ci, uintptr_t glowObject, int targetindex) {
     if(glow_enabled){
-        int glowIndex = Memory.readMem<int>(ci.entity + m_iGlowIndex);
+        int glowIndex = Memory.readMem<int>(ci.entity + pNetVars.m_iGlowIndex);
         GlowObject tGlow;
         Memory.readMemTo<GlowObject>(glowObject + (glowIndex * 0x38), &tGlow);
         //tGlow = {{}, (float)TeamR, (float)TeamG, (float)TeamB, alpha, {}, true, false};
         tGlow.red = TeamR;
         tGlow.green = TeamG;
         tGlow.blue = TeamB;
+        if(targetindex != 0){
+            tGlow.red = 255;
+            tGlow.green = 255;
+            tGlow.blue = 0;
+        }
         tGlow.alpha = alpha;
         tGlow.renderWhenOccluded = true;
         tGlow.renderWhenUnoccluded = false;
         Memory.writeMemFrom<GlowObject>(glowObject + (glowIndex * 0x38), &tGlow);
-        Memory.writeMemFrom<Chams>(ci.entity + m_clrRender, &clr_team);
+        Memory.writeMemFrom<Chams>(ci.entity + pNetVars.m_clrRender, &clr_team);
     }
 }
 
-void Glow::ProcessEntityEnemy(const ClientInfo& ci, const Entity& e, uintptr_t glowObject) {
+void Glow::ProcessEntityEnemy(const ClientInfo& ci, const Entity& e, uintptr_t glowObject, int targetindex) {
     if(glow_enabled){
-        int glowIndex = Memory.readMem<int>(ci.entity + m_iGlowIndex);
+        int glowIndex = Memory.readMem<int>(ci.entity + pNetVars.m_iGlowIndex);
         GlowObject eGlow;
         Memory.readMemTo<GlowObject>(glowObject + (glowIndex * 0x38), &eGlow);
-        eGlow = setGlowColor(eGlow, e.health, ci.entity);
+        eGlow = setGlowColor(eGlow, e.health, ci.entity, targetindex);
         Memory.writeMemFrom<GlowObject>(glowObject + (glowIndex * 0x38), &eGlow);
-        Memory.writeMemFrom<Chams>(ci.entity + m_clrRender, &clr_enemy);
+        Memory.writeMemFrom<Chams>(ci.entity + pNetVars.m_clrRender, &clr_enemy);
     }
 }
 
 void Glow::ProcessTargetEntity(const ClientInfo& ci, uintptr_t glowObject) {
     if(glow_enabled){
-        int glowIndex = Memory.readMem<int>(ci.entity + m_iGlowIndex);
+        int glowIndex = Memory.readMem<int>(ci.entity + pNetVars.m_iGlowIndex);
         GlowObject targetGlow;
         Memory.readMemTo<GlowObject>(glowObject + (glowIndex * 0x38), &targetGlow);
         targetGlow.red = 255;
@@ -182,7 +189,7 @@ void Glow::ProcessD3D9Render(const ClientInfo& ci, const Entity& e, int index){
 
         player_info player;
         uintptr_t clientState = Functions::getClientState();
-        uintptr_t uinfoTable = Memory.readMem<uintptr_t>(clientState + dwClientState_PlayerInfo);
+        uintptr_t uinfoTable = Memory.readMem<uintptr_t>(clientState + pOffsets.dwClientState_PlayerInfo);
         uintptr_t items = Memory.readMem<std::uintptr_t>(Memory.readMem<uintptr_t>(uinfoTable + 0x40) + 0xC);
         Memory.readMemTo<player_info>(Memory.readMem<uintptr_t>((items + 0x28) + (index * 0x34)), &player);   // read player struct
 
@@ -211,10 +218,10 @@ void Glow::ProcessD3D9Render(const ClientInfo& ci, const Entity& e, int index){
                 Paint::Line(Paint::width / 2,Paint::height - 1,screenhead.x, screenhead.y + height_f, snaplineColor, 1);    // draw snaplines
 
             if(weapon_health_enabled){
-                int weaponId = Memory.readMem<int>(ci.entity + m_hActiveWeapon);
+                int weaponId = Memory.readMem<int>(ci.entity + pNetVars.m_hActiveWeapon);
                 int weaponEnt = Memory.readMem<int>(pOffsets.dwEntityList + ((weaponId & 0xFFF) - 1) * 0x10);
                 if(weaponEnt != NULL){
-                    int entityWeapon = Memory.readMem<int>(weaponEnt + m_iItemDefinitionIndex);
+                    int entityWeapon = Memory.readMem<int>(weaponEnt + pNetVars.m_iItemDefinitionIndex);
                     char str[64];
                     snprintf(str, 64, "%dhp", e.health);
 

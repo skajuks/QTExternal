@@ -1,5 +1,4 @@
 #include "MemMan.h"
-#include <TlHelp32.h>
 #include <iostream>
 #include <iomanip>
 #include "Functions.h"
@@ -202,6 +201,10 @@ Offsets MemMan::getOffsets(int id){
 
     // special offsets that cannot be found on hazeddumper
 
+    //pOffsets.offsetClientState = Memory.readMem<uintptr_t>(engineModule + generateMask("8B 3D ? ? ? ? 8A F9 F3 0F 11 45 FC", enginemod.dwBase, enginemod.dwSize) + 2);
+
+    //pOffsets.m_flNextCmdTime = findPattern(new byte[] { 0xF2, 0x0F, 0x10, 0x87, 0x00, 0x00, 0x00, 0x00, 0x66, 0x0F, 0x2F, 0x05}, "xxxx????xxxx", enginemod.dwBase, enginemod.dwSize) + 4 + pOffsets.offsetClientState;
+    //pOffsets.g_bVoiceRecording = findPattern(new byte[] { 0x80, 0x3D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x75, 0x0C, 0x6A }, "xx????xxxx", enginemod.dwBase, enginemod.dwSize) + 2;
     pOffsets.cl_sidespeed = findPattern(new byte[] { 0xF3, 0x0F, 0x10, 0x05, 0x00, 0x00, 0x00, 0x00, 0xF3, 0x0F, 0x11, 0x44, 0x24, 0x00, 0x81, 0x74, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0xD9, 0x44, 0x24, 0x14, 0xEB, 0x07 }, "xxxx????xxxxx?xxx?????xxxxxx", mod.dwBase, mod.dwSize) + 0x4;
     pOffsets.cl_forwardspeed = findPattern(new byte[] { 0xF3, 0x0F, 0x10, 0x05, 0x00, 0x00, 0x00, 0x00, 0xF3, 0x0F, 0x11, 0x44, 0x24, 0x00, 0x81, 0x74, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEB, 0x37 }, "xxxx????xxxxx?xxx?????xx", mod.dwBase, mod.dwSize) + 0x4;
     pOffsets.dwUse = findPattern(new byte[] { 0x8B, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x8B, 0xF2, 0x8B, 0xC1, 0x83, 0xCE, 0x20 }, "xx????xxxxxxx", mod.dwBase, mod.dwSize) + 2;
@@ -213,22 +216,110 @@ Offsets MemMan::getOffsets(int id){
     pOffsets.left = Memory.readMem<uintptr_t>(gameModule + pOffsets.forward + 0x1D1);
     pOffsets.right = Memory.readMem<uintptr_t>(gameModule + pOffsets.forward + 0x200);
     pOffsets.forward = Memory.readMem<uintptr_t>(gameModule + pOffsets.forward + 0xF5);
+    pOffsets.Callback__IsReady = Memory.readMem<uintptr_t>(gameModule + generateMask("56 8B 35 ? ? ? ? 57 83 BE", mod.dwBase, mod.dwSize)) - 4;
+    pOffsets.ConfirmedReservationCallback = Memory.readMem<uintptr_t>(pOffsets.Callback__IsReady + 7);
 
     /* general dump of offsets */
 
-    pOffsets.g_pClientClassHead = Memory.readMem<uintptr_t>(gameModule + generateMask("33 DB D3 E0 89 5D F4 09 84 97 ? ? ? ? A1", mod.dwBase, mod.dwSize) + 15);
+    pOffsets.g_pClientClassHead = Memory.readMem<uintptr_t>(gameModule + generateMask("A1 ? ? ? ? C3 CC CC CC CC CC CC CC CC CC CC A1 ? ? ? ? B9", mod.dwBase, mod.dwSize) + 1);
     pOffsets.dwForceJump = Memory.readMem<uint32_t>(gameModule + generateMask("8B 0D ? ? ? ? 8B D6 8B C1 83 CA 02", mod.dwBase, mod.dwSize) + 2) + 0;
     pOffsets.dwGlowObjectManager = Memory.readMem<uint32_t>(gameModule + generateMask("A1 ? ? ? ? A8 01 75 4B", mod.dwBase, mod.dwSize) + 1) + 4;
     pOffsets.dwEntityList = Memory.readMem<uint32_t>(gameModule + generateMask("BB ? ? ? ? 83 FF 01 0F 8C ? ? ? ? 3B F8", mod.dwBase, mod.dwSize) + 1) + 0;
     pOffsets.dwLocalPlayer = Memory.readMem<uint32_t>(gameModule + generateMask("8D 34 85 ? ? ? ? 89 15 ? ? ? ? 8B 41 08 8B 48 04 83 F9 FF", mod.dwBase, mod.dwSize) + 3) + 4;
-    pOffsets.dwClientState = Memory.readMem<uint32_t>(engineModule + generateMask("A1 ? ? ? ? 33 D2 6A 00 6A 00 33 C9 89 B0", enginemod.dwBase, enginemod.dwSize) + 1);
+    pOffsets.dwClientState = Memory.readMem<uint32_t>(engineModule + generateMask("A1 ? ? ? ? 33 D2 6A 00 6A 00 33 C9 89 B0", enginemod.dwBase, enginemod.dwSize) + 1) - engineModule;
     pOffsets.model_ambient_min = Memory.readMem<uint32_t>(engineModule + generateMask("F3 0F 10 0D ? ? ? ? F3 0F 11 4C 24 ? 8B 44 24 20 35 ? ? ? ? 89 44 24 0C", enginemod.dwBase, enginemod.dwSize) + 4);
     pOffsets.dwViewMatrix = Memory.readMem<uint32_t>(gameModule + generateMask("0F 10 05 ? ? ? ? 8D 85 ? ? ? ? B9", mod.dwBase, mod.dwSize) + 3) + 176;
+    pOffsets.dwbSendPackets = Memory.readMem<uint32_t>(engineModule + generateMask("B3 01 8B 01 8B 40 10 FF D0 84 C0 74 0F", enginemod.dwBase, enginemod.dwSize)) + 1;
+    pOffsets.dwInput = Memory.readMem<uint32_t>(gameModule + generateMask("B9 ? ? ? ? F3 0F 11 04 24 FF 50 10", mod.dwBase, mod.dwSize) + 1);
+    pOffsets.clientstate_last_outgoing_command = Memory.readMem<uint32_t>(engineModule + generateMask("8B 8F ? ? ? ? 8B 87 ? ? ? ? 41", enginemod.dwBase, enginemod.dwSize) + 2);
+    pOffsets.dwClientState_PlayerInfo = Memory.readMem<uint32_t>(engineModule + generateMask("8B 89 ? ? ? ? 85 C9 0F 84 ? ? ? ? 8B 01", enginemod.dwBase, enginemod.dwSize) + 2);
+    pOffsets.dwClientState_ViewAngles = Memory.readMem<uint32_t>(engineModule + generateMask("F3 0F 11 80 ? ? ? ? F3 0F 10 44 24 38", enginemod.dwBase, enginemod.dwSize) + 4);
 
-    // xorer offsets
+    // xored offsets
 
     pOffsets.xor_cl_sidespeed = calcXorWithValue(pOffsets.cl_sidespeed);
     pOffsets.xor_cl_forwardspeed = calcXorWithValue(pOffsets.cl_forwardspeed);
 
     return pOffsets;
+}
+
+///////////////////////////////////////////////////////////////
+/// Netvars
+///////////////////////////////////////////////////////////////
+
+RecvTable* NetVars::getTable(const char* name){
+    ClientClass cc;
+    Memory.read<ClientClass>(gameModule + hazedumper::signatures::dwGetAllClasses, cc);
+
+    while(1 < 2){
+        char varname[64];
+        Memory.read<char[64]>(reinterpret_cast<uintptr_t>(cc.m_pNetworkName), varname);
+        if(!strcmp(varname, name))
+            return cc.m_pRecvTable;
+        if(cc.m_pNext == 0)
+            break;
+        Memory.read<ClientClass>(reinterpret_cast<uintptr_t>(cc.m_pNext), cc);
+    }
+    return nullptr;
+}
+
+int NetVars::getProp(RecvTable* pTable, const char* name){
+    RecvTable recvt;
+    Memory.read<RecvTable>(reinterpret_cast<uintptr_t>(pTable), recvt);
+
+    int offset = 0;
+    for(int i = 0; i < recvt.m_nProps; i++){
+        RecvProp prop;
+        Memory.read<RecvProp>(reinterpret_cast<uintptr_t>(recvt.m_pProps) + i * sizeof (RecvProp), prop);
+        if(prop.m_RecvType == DPT_DataTable){
+            int extra = getProp(prop.m_pDataTable, name);
+            if(extra)
+                offset += prop.m_Offset + extra;
+        } else {
+            char varname[64];
+            Memory.read<char[64]>(reinterpret_cast<uintptr_t>(prop.m_pVarName), varname);
+
+            if(!strcmp(varname, name))
+                return prop.m_Offset;
+        }
+    }
+    return offset;
+}
+
+int NetVars::getOffset(const char* table_name, const char* var_name){
+    RecvTable* recvt = getTable(table_name);
+    if(!recvt){
+        std::cout << "Failed to find table" << std::endl;
+        return 0;
+    }
+    int offset = getProp(recvt, var_name);
+    if(!offset){
+        std::cout << "Failed to find offset" << std::endl;
+        return 0;
+    }
+
+    std::cout << "Found " << var_name << "-> 0x" << std::hex << offset << std::endl;
+    return offset;
+}
+
+netVarStr NetVars::dumpNetvars(){
+    netVarStr pNetVars;
+    printf("Dumping netvars..\n");
+    pNetVars.m_iTeamNum = getOffset("CBasePlayer", "m_iTeamNum");
+    pNetVars.m_clrRender = getOffset("CBaseEntity", "m_clrRender");
+    pNetVars.m_bGunGameImmunity = getOffset("CCSPlayer", "m_bGunGameImmunity");
+    pNetVars.m_bHasDefuser = getOffset("CCSPlayer", "m_bHasDefuser");
+    pNetVars.m_bIsScoped = getOffset("CCSPlayer", "m_bIsScoped");
+    pNetVars.m_bIsDefusing = getOffset("CCSPlayer", "m_bIsDefusing");
+    pNetVars.m_iGlowIndex = getOffset("CCSPlayer", "m_flFlashDuration") + 24;
+    pNetVars.m_hActiveWeapon = getOffset("CBasePlayer", "m_hActiveWeapon");
+    pNetVars.m_iItemDefinitionIndex = getOffset("CBaseCombatWeapon", "m_iItemDefinitionIndex");
+    pNetVars.m_flFlashDuration = pNetVars.m_iGlowIndex - 24;
+    pNetVars.m_dwBoneMatrix = getOffset("CBaseAnimating", "m_nForceBone") + 28;
+    pNetVars.m_aimPunchAngle = getOffset("CBasePlayer", "m_aimPunchAngle");
+    pNetVars.m_iDefaultFOV = getOffset("CCSPlayer", "m_iDefaultFOV");
+    pNetVars.m_hObserverTarget = getOffset("CBasePlayer", "m_hObserverTarget");
+    pNetVars.m_bSpotted = getOffset("CBaseEntity", "m_bSpotted");
+
+    return pNetVars;
 }
