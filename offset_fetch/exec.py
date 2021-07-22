@@ -39,7 +39,8 @@ def fetchOffsets(debug_mode):
                     print("No new commits detected.. exiting")
                     return
         except AttributeError:
-            pass
+            print("[ERROR] : cannot find timestamp.. exiting")
+            return
     with open("offsets.hpp", "w") as file:
         file.write("#pragma once \n#include <cstdint> \n#include <iostream> \nnamespace pyfetcher {\n") # write c++ includes and start namespace
         for line in response.splitlines():
@@ -51,9 +52,11 @@ def fetchOffsets(debug_mode):
                 if(debug_mode):
                     print((f"constexpr ::std::ptrdiff_t {key} = {value};"))
             except AttributeError:
-                pass
+                print("[ERROR] : finding offset {}".format(str(line)))
+                return
         file.write("}")        
     if(debug_mode):     
-        print((f"{len(offsets.keys())} offsets found!"))   
+        print((f"{len(offsets.keys())} offsets found!")) 
+    print("\nDone.")      
 
-fetchOffsets(0) # 0 -> debug off
+fetchOffsets(1) # 0 -> debug off
