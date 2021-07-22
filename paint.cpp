@@ -102,8 +102,6 @@ int Paint::render()
 
                if(e[entityIndex].health > 0 && e[entityIndex].team != e[0].team){
                    Glow::ProcessD3D9Render(ci[entityIndex], e[entityIndex], entityIndex);
-
-
                }
             } while(ci[entityIndex++].nextEntity);
         }

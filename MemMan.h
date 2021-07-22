@@ -4,7 +4,7 @@
 #include <TlHelp32.h>
 #include <iostream>
 #include "Structs.h"
-#include "offsets.hpp"
+#include "offset_fetch/offsets.hpp"
 
 struct module{
     DWORD dwBase, dwSize;

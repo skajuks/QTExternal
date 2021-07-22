@@ -114,8 +114,6 @@ int main(int argc, char** argv) {
 
     //std::thread (Misc::fakeLagThreaded, e[0], fakelag_enabled).detach();  // thread used for fakelag
 
-
-
     QTimer *timer = new QTimer(window);
     QObject::connect(timer, &QTimer::timeout, [&](){
 
@@ -147,11 +145,6 @@ int main(int argc, char** argv) {
 
                 if(e[entityIndex].team == e[0].team){
 
-                    //if(Memory.readMem<uintptr_t>(ci[entityIndex].entity + pNetVars.m_hObserverTarget) != ci[0].entity){
-                        //player_info pInfo;
-                        //Memoryt.read<player_info>(ci[entityIndex].entity)
-                    //}
-
                     if(blockbot_enabled){
                         float dist = Aim::getClosestEntityByDistance(e[0].vecOrigin, e[entityIndex].vecOrigin);     //add toggle for enemy team
                         if(!Math::equalVector(e[0].vecOrigin, e[entityIndex].vecOrigin))
@@ -180,7 +173,6 @@ int main(int argc, char** argv) {
 
                     if(toggleAimbot){
                         VECTOR2 newDistance = Aim::getClosestEntity(e[0], ci[entityIndex]);
-                        //std::cout << "d " << newDistance.x << ", " << newDistance.y << '\n';
                         if(newDistance.x < oldx && newDistance.y < oldy && newDistance.x <= aimfov && newDistance.y <= aimfov){
                             oldx = newDistance.x;
                             oldy = newDistance.y;

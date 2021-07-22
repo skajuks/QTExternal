@@ -249,7 +249,7 @@ Offsets MemMan::getOffsets(int id){
 
 RecvTable* NetVars::getTable(const char* name){
     ClientClass cc;
-    Memory.read<ClientClass>(gameModule + hazedumper::signatures::dwGetAllClasses, cc);
+    Memory.read<ClientClass>(gameModule + pyfetcher::dwGetAllClasses, cc);
 
     while(1 < 2){
         char varname[64];
