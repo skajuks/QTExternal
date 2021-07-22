@@ -11,20 +11,29 @@ CONFIG += c++17
 SOURCES += \
     Functions.cpp \
     MemMan.cpp \
+    Misc.cpp \
+    Overlay.cpp \
+    Visuals.cpp \
     aimbot.cpp \
-    bhop.cpp \
-    glow.cpp \
+    csmath.cpp \
+    localplayer.cpp \
     main.cpp \
-    noflash.cpp
+    paint.cpp
 
 HEADERS += \
     Functions.h \
     MemMan.h \
+    Misc.h \
+    Structs.h \
+    Visuals.h \
     aimbot.h \
-    bhop.h \
-    glow.h \
-    noflash.h \
+    csmath.h \
+    entity.h \
+    esp.h \
+    localplayer.h \
     offsets.hpp \
+    paint.h \
+    stylesheet.h \
     widget.h
 
 FORMS += \
@@ -34,3 +43,12 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+win32:CONFIG(release, debug|release): LIBS += -L'C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Lib/x86/' -ld3dx9 -ladvapi32 -luser32
+else:win32:CONFIG(debug, debug|release): LIBS += -L'C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Lib/x86/' -ld3dx9d -ladvapi32 -luser32
+
+INCLUDEPATH += 'C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include'
+DEPENDPATH += 'C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Lib/x86'
+
+DEFINES += _USE_MATH_DEFINES
+DEFINES += _CRT_FUNCTIONS_REQUIRED=1

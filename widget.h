@@ -2,6 +2,7 @@
 #define WIDGET_H
 
 #include <QWidget>
+#include <QListWidgetItem>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -46,7 +47,58 @@ private slots:
 
     void on_glowAlpha_valueChanged(double arg1);
 
-    void on_Flashvalue_valueChanged(double arg1);
+    void on_chams_bright_slider_valueChanged(int value);
+
+    void on_team_chams_stateChanged(int arg1);
+
+    void on_fov_slider_valueChanged(int value);
+
+    void on_nightmode_slider_valueChanged(int value);
+
+
+    void on_enemy_chams_stateChanged(int arg1);
+
+    void on_fakelag_slider_valueChanged(int value);
+
+    void on_esp_enable_stateChanged(int arg1);
+
+    void on_enable_boxes_stateChanged(int arg1);
+
+    void on_esp_name_weapon_stateChanged(int arg1);
+
+    void on_esp_snaplines_stateChanged(int arg1);
+
+    void on_esp_health_stateChanged(int arg1);
+
+    void on_esp_box_color_stateChanged(int arg1);
+
+    void on_esp_snapline_color_stateChanged(int arg1);
+
+    void on_jump_shot_enable_stateChanged(int arg1);
+
+    void on_toggle_aimbot_on_key_stateChanged(int arg1);
+
+    void on_doorspammer_enable_stateChanged(int arg1);
+
+    void on_blockbot_enable_stateChanged(int arg1);
+
+    void on_testCommand_clicked();
+
+    void on_skybox_list_itemClicked(QListWidgetItem *item);
+
+    void on_thirdperson_toggle_stateChanged(int arg1);
+
+    void on_dm_exploit_enable_stateChanged(int arg1);
+
+    void on_perfect_nade_enable_stateChanged(int arg1);
+
+    void on_enable_autoaccept_clicked();
+
+    void on_radar_enable_stateChanged(int arg1);
+
+    void on_fakelag_enable_stateChanged(int arg1);
+
+    void on_enable_radio_stateChanged(int arg1);
 
 private:
 
