@@ -1,6 +1,5 @@
 #include "paint.h"
 #include "Functions.h"
-#include "offsets.hpp"
 #include "csmath.h"
 #include "entity.h"
 #include <string>
@@ -25,9 +24,9 @@ extern toggleStateData stateData[6];
 
 int Paint::d3D9Init(HWND hWnd){
 
-    if (FAILED(Direct3DCreate9Ex(D3D_SDK_VERSION, &d3dObject))){
-        exit(1);
-    }
+    //if (FAILED(Direct3DCreate9Ex(D3D_SDK_VERSION, &d3dObject))){
+        //exit(1);
+    //}
 
     ZeroMemory(&d3dparams, sizeof(d3dparams));
 
@@ -44,11 +43,11 @@ int Paint::d3D9Init(HWND hWnd){
     HRESULT res = d3dObject->CreateDeviceEx(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dparams, 0, &d3dDevice);
 
     if (FAILED(res)){
-        std::wstring ws(DXGetErrorString(res));
-        std::string str(ws.begin(), ws.end());
-        std::wstring ws2(DXGetErrorDescription(res));
-        std::string str2(ws2.begin(), ws2.end());
-        std::string error = "Error: " + str + " error description: " + str2;
+        //std::wstring ws(DXGetErrorString(res));
+        //std::string str(ws.begin(), ws.end());
+        //std::wstring ws2(DXGetErrorDescription(res));
+        //std::string str2(ws2.begin(), ws2.end());
+       // std::string error = "Error: " + str + " error description: " + str2;
         exit(1);
     }
 

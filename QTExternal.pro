@@ -31,7 +31,6 @@ HEADERS += \
     entity.h \
     esp.h \
     localplayer.h \
-    offsets.hpp \
     paint.h \
     stylesheet.h \
     widget.h

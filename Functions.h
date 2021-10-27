@@ -31,12 +31,13 @@ public:
     static BYTE getFlag(uintptr_t localPlayer);
     static bool isGameRunning();
     static int getFlashDuration(uintptr_t localPlayer);
-    static void setFlashDuration(uintptr_t localPlayer, int duration);
+    static void setFlashDuration(uintptr_t localPlayer, float duration);
     static uintptr_t getEntity(int index);
     static char* getActiveWeapon(int entityWeapon);
     static bool checkIfScoped(uintptr_t entity);
     static void forwardSpeed(int value);
     static void sideSpeed(float value);
+    static bool checkPlayerSpottedByMask(uintptr_t entity, uintptr_t localPlayer);
     static void clientCmd_Unrestricted(const char* command);
 
 };extern Functions fun;

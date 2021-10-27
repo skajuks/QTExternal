@@ -99,9 +99,9 @@ public:
 	uintptr_t getAddress(uintptr_t, std::vector<uintptr_t>);
     bool MemoryCompare(const BYTE* data, const BYTE* mask, const char* szMask);
     Offsets getOffsets(int id);
-    int findPattern(byte pattern[], std::string mask, int moduleBase, int moduleSize);
+    int findPattern(byte pattern[], std::string mask, int moduleBase, int moduleSize, std::string name);
     MODULEENTRY32 getModuleInfo(const char* modName, DWORD proc_id);
-    uintptr_t generateMask(std::string signature, int moduleBase, int moduleSize);
+    uintptr_t generateMask(std::string signature, int moduleBase, int moduleSize, std::string name);
 private:
 
 

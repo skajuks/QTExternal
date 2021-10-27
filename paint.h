@@ -9,7 +9,7 @@
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "d3dx9.lib")
 
-#include <DxErr.h> //get error from error code
+//#include <DxErr.h> //get error from error code
 #pragma comment(lib, "dxerr.lib")
 #pragma comment(lib, "legacy_stdio_definitions.lib")
 

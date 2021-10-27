@@ -100,6 +100,12 @@ private slots:
 
     void on_enable_radio_stateChanged(int arg1);
 
+    void on_flash_slider_valueChanged(int value);
+
+    void on_dormant_enable_stateChanged(int arg1);
+
+    void on_ffa_mode_enable_stateChanged(int arg1);
+
 private:
 
 };

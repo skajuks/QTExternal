@@ -22,6 +22,7 @@ int aimfov = 20;
 float smooth = 1.f;
 float recoil_perc = 1.f;
 bool enable_silentaim = false;
+bool dormant_mode_enabled = false;
 
 char* pistols[] ={0,0,0,0,0};   // add for every gun
 
@@ -36,6 +37,10 @@ void Aim::setFOVonSlider(int value){
 
 void Aim::setSmoothOnSlider(float value){
     smooth = value;
+}
+
+void Aim::enableDormantMode(){
+    dormant_mode_enabled = !dormant_mode_enabled;
 }
 
 void Aim::setRecoilControlPerc(float value){
@@ -111,7 +116,7 @@ float Aim::getClosestEntityByDistance(const Entity &Entity_local, VECTOR3 Entity
     return sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);
 }
 
-VECTOR2 Aim::getClosestEntity(const Entity &Entity_local, const ClientInfo &ci){
+VECTOR2 Aim::getClosestEntity(const Entity &Entity_local, const ClientInfo &ci, const ClientInfo &ci_local){
 
     VECTOR3 vecOrigin = Entity_local.vecOrigin;
     VECTOR3 entBone = Math::getBoneMatrix(ci.entity, bone_int);
@@ -121,7 +126,15 @@ VECTOR2 Aim::getClosestEntity(const Entity &Entity_local, const ClientInfo &ci){
 
     VECTOR3 angleTo = Math::CalcAngle(vecOrigin, entBone);
     VECTOR2 finalAngle = Math::CalcDistance(pAngle.x, pAngle.y, angleTo.x, angleTo.y);
-    return finalAngle;
+
+    if(!dormant_mode_enabled) return finalAngle;
+
+    if(dormant_mode_enabled && Functions::checkPlayerSpottedByMask(ci.entity, ci_local.entity)){
+        return finalAngle;
+    } else {
+        return {999999.f, 999999.f};
+    }
+
 }
 
 aimbotVariables Aim::executeAimbot(const ClientInfo &target, const Entity &Entity_local, const ClientInfo &local_ci){
@@ -146,11 +159,10 @@ aimbotVariables Aim::executeAimbot(const ClientInfo &target, const Entity &Entit
     VECTOR2 readyAngles = {AimAngle.x, AimAngle.y};
 
     if(!in_array(noAimbotEntityArray, 11, entityWeapon)){
-            if(enable_silentaim)
-                doSilentAim(readyAngles, true);
-            else
-               Memory.writeMem<VECTOR2>(Functions::getClientState() + pOffsets.dwClientState_ViewAngles, readyAngles);
-
+        if(enable_silentaim)
+            doSilentAim(readyAngles, true);
+        else
+           Memory.writeMem<VECTOR2>(Functions::getClientState() + pOffsets.dwClientState_ViewAngles, readyAngles);
     }
     variables.entityWeapon = entityWeapon;
     variables.AimAngle = AimAngle;

@@ -31,7 +31,7 @@
  *
  *IDEAS
  *
- *Option for flash max value to be changed ( make look legit )
+ *Option for flash max value to be changed ( make look legit )        kinda done, looks goofy tho
  *Aimbot working if enemy dormant
  *Show viewangles of enemy
  *Can change aim bone
@@ -76,10 +76,13 @@ bool  esp_master_state  = false;
 bool  autoaccpet_clicked= false;
 bool  radar_enabled     = false;
 bool  fakelag_enabled   = false;
+bool  target_teammates  = false;
 const char* skybox_name;
 //const char* spectators[] = {};
 
 extern int aimfov;
+
+void getClosestEntityIndex(int &entityIndex, float &oldx, float &oldy, int &targetIndex);
 
 int main(int argc, char** argv) {
     auto app = new QApplication(argc, argv);
@@ -90,7 +93,7 @@ int main(int argc, char** argv) {
 
     window->show();
 
-    std::cout << std::hex << pOffsets.dwbSendPackets << " - "  << pyfetcher::dwbSendPackets << std::endl;
+    //std::cout << std::hex << pNetVars. << " - "  << pyfetcher::dwbSendPackets << std::endl;
     // add bones and entity selector function choices to ui
 
     for(auto item: skybox_array){
@@ -161,25 +164,19 @@ int main(int argc, char** argv) {
                     if(radar_enabled)
                         Memory.writeMem<bool>(ci[0].entity + pNetVars.m_bSpotted, true);    // make this look nicer :)
 
-                    /*if(blockbot_enabled){   // move to a thread!!!!!
-                        float dist = Aim::getClosestEntityByDistance(e[0].vecOrigin, e[entityIndex].vecOrigin);
-                        if(!Math::equalVector(e[0].vecOrigin, e[entityIndex].vecOrigin))
-                            if(dist < bestBlockDist && entityIndex != 0){
-                                bestBlockDist = dist;
-                                blockTargetIndex = entityIndex;
-
-                            }
-                    }*/
-
-                    if(toggleAimbot){
-                        VECTOR2 newDistance = Aim::getClosestEntity(e[0], ci[entityIndex]);
+                    if(toggleAimbot && !target_teammates){
+                        /*VECTOR2 newDistance = Aim::getClosestEntity(e[0], ci[entityIndex], ci[0]);
                         if(newDistance.x < oldx && newDistance.y < oldy && newDistance.x <= aimfov && newDistance.y <= aimfov){
                             oldx = newDistance.x;
                             oldy = newDistance.y;
                             targetIndex = entityIndex;
-                        }
+                        }*/
+                        getClosestEntityIndex(entityIndex, oldx, oldy, targetIndex);
                     }
                     Glow::ProcessEntityEnemy(ci[entityIndex], e[entityIndex], glowObjectManager, targetIndex == entityIndex ? 1 : 0);
+                }
+                if(toggleAimbot && target_teammates){
+                    getClosestEntityIndex(entityIndex, oldx, oldy, targetIndex);
                 }
             }
         } while(ci[entityIndex++].nextEntity);
@@ -280,27 +277,36 @@ int main(int argc, char** argv) {
 
         window->ui->aimbot_state_ui->setText(QString("AIMBOT ON STANDBY"));
         window->ui->aimbot_state_ui->setStyleSheet(QString("QLabel{color: rgba(255,255,0,255)}"));
-        window->ui->loc_player_vel->setText(QString::number(e[0].vecVelocity.z));
-        window->ui->pofst->setText(QString::number(bestBlockDist));
-        e[0].vecVelocity.z > 0 ? window->ui->loc_player_vel->setStyleSheet(QString("QLabel{color: rgba(0,255,0,255)}")) : window->ui->loc_player_vel->setStyleSheet(QString("QLabel{color: rgba(255,255,0,255)}"));
-        window->ui->curr_ent_cnt_val->setText(QString::number(aliveEntity));
-        window->ui->loc_p_ent_num->setText(QString::number(ci[0].entity));
-        window->ui->curr_tgt->setText(QString::number(targetIndex));
-        window->ui->dist_x->setText(QString::number(oldx));
-        window->ui->dist_y->setText(QString::number(oldy));
-        window->ui->enable_autoaccept->setText(QString(Misc::returnAutoAcceptState() ? "Accepting match" : "Enable autoaccept"));
-        window->ui->enable_autoaccept->setStyleSheet(QString(Misc::returnAutoAcceptState() ? "QPushButton{background-color: lime}" : "QPushButton{background-color: blue}"));
-        window->ui->ent_recoil->setText(QString(QString::number(variables.recoil.x) + " : " + QString::number(variables.recoil.y) + " : " +
-                                                QString::number(variables.recoil.z)));
+        //window->ui->loc_player_vel->setText(QString::number(e[0].vecVelocity.z));
+        //window->ui->pofst->setText(QString::number(bestBlockDist));
+        //e[0].vecVelocity.z > 0 ? window->ui->loc_player_vel->setStyleSheet(QString("QLabel{color: rgba(0,255,0,255)}")) : window->ui->loc_player_vel->setStyleSheet(QString("QLabel{color: rgba(255,255,0,255)}"));
+        //window->ui->curr_ent_cnt_val->setText(QString::number(aliveEntity));
+        //window->ui->loc_p_ent_num->setText(QString::number(ci[0].entity));
+        //window->ui->curr_tgt->setText(QString::number(targetIndex));
+        //window->ui->dist_x->setText(QString::number(oldx));
+        //window->ui->dist_y->setText(QString::number(oldy));
+        //->ui->enable_autoaccept->setText(QString(Misc::returnAutoAcceptState() ? "Accepting match" : "Enable autoaccept"));
+        //window->ui->enable_autoaccept->setStyleSheet(QString(Misc::returnAutoAcceptState() ? "QPushButton{background-color: lime}" : "QPushButton{background-color: blue}"));
+        //window->ui->ent_recoil->setText(QString(QString::number(variables.recoil.x) + " : " + QString::number(variables.recoil.y) + " : " +
+                                                //QString::number(variables.recoil.z)));
 
-        window->ui->ent_weapon->setText(QString::number(variables.entityWeapon));
-        window->ui->ent_angles->setText(QString(QString::number(variables.AimAngle.x) + " : " + QString::number(variables.AimAngle.y) + " : " +
-                                                QString::number(variables.AimAngle.z)));
+        //window->ui->ent_weapon->setText(QString::number(variables.entityWeapon));
+        //window->ui->ent_angles->setText(QString(QString::number(variables.AimAngle.x) + " : " + QString::number(variables.AimAngle.y) + " : " +
+                                                //QString::number(variables.AimAngle.z)));
 
     });
     timer->start(1);
 
     return app->exec();
+}
+
+void getClosestEntityIndex(int &entityIndex, float &oldx, float &oldy, int &targetIndex){
+    VECTOR2 newDistance = Aim::getClosestEntity(e[0], ci[entityIndex], ci[0]);
+    if(newDistance.x < oldx && newDistance.y < oldy && newDistance.x <= aimfov && newDistance.y <= aimfov){
+        oldx = newDistance.x;
+        oldy = newDistance.y;
+        targetIndex = entityIndex;
+    }
 }
 
 Widget::Widget(QWidget *parent)
@@ -313,6 +319,19 @@ Widget::Widget(QWidget *parent)
 Widget::~Widget()
 {
     delete ui;
+}
+
+void Widget::on_ffa_mode_enable_stateChanged(int arg1){
+    target_teammates = !target_teammates;
+}
+
+void Widget::on_dormant_enable_stateChanged(int arg1){
+    Aim::enableDormantMode();
+}
+
+void Widget::on_flash_slider_valueChanged(int value){
+    Misc::setNoFlashAmount(float(value));
+    ui->flash_value->setText(QString::number(value));
 }
 
 void Widget::on_enable_radio_stateChanged(int arg1){

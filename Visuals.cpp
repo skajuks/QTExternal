@@ -1,6 +1,5 @@
 #include "Visuals.h"
 #include "Functions.h"
-#include "offsets.hpp"
 #include "Structs.h"
 #include "paint.h"
 

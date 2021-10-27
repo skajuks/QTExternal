@@ -136,7 +136,7 @@ module GetModule(const wchar_t* moduleName, int id) {
     return mod;
 }
 
-int MemMan::findPattern(byte pattern[], std::string mask, int moduleBase, int moduleSize)
+int MemMan::findPattern(byte pattern[], std::string mask, int moduleBase, int moduleSize, std::string name)
 {
     BYTE* moduleBytes = new BYTE[moduleSize];
     SIZE_T numBytes = 0;
@@ -159,11 +159,12 @@ int MemMan::findPattern(byte pattern[], std::string mask, int moduleBase, int mo
                 return i;
         }
     }
-    std::cout << "not found" << std::endl;
+
+    std::cout << "Failed to dump offset " + name << std::endl;
     return 0;
 }
 
-uintptr_t MemMan::generateMask(std::string signature, int moduleBase, int moduleSize){
+uintptr_t MemMan::generateMask(std::string signature, int moduleBase, int moduleSize, std::string name){
     std::vector<byte> temp;
     std::istringstream iss(signature);
     std::string s;
@@ -179,7 +180,7 @@ uintptr_t MemMan::generateMask(std::string signature, int moduleBase, int module
     for(auto b : temp) {
         mask += b ? "x" : "?";
     }
-    return findPattern(temp.data(), mask, moduleBase, moduleSize);
+    return findPattern(temp.data(), mask, moduleBase, moduleSize, name);
 }
 
 UINT32 calcXorWithValue(int cvarOffset)
@@ -203,43 +204,47 @@ Offsets MemMan::getOffsets(int id){
 
     //pOffsets.offsetClientState = Memory.readMem<uintptr_t>(engineModule + generateMask("8B 3D ? ? ? ? 8A F9 F3 0F 11 45 FC", enginemod.dwBase, enginemod.dwSize) + 2);
 
-    //pOffsets.m_flNextCmdTime = findPattern(new byte[] { 0xF2, 0x0F, 0x10, 0x87, 0x00, 0x00, 0x00, 0x00, 0x66, 0x0F, 0x2F, 0x05}, "xxxx????xxxx", enginemod.dwBase, enginemod.dwSize) + 4 + pOffsets.offsetClientState;
-    //pOffsets.g_bVoiceRecording = findPattern(new byte[] { 0x80, 0x3D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x75, 0x0C, 0x6A }, "xx????xxxx", enginemod.dwBase, enginemod.dwSize) + 2;
-    pOffsets.cl_sidespeed = findPattern(new byte[] { 0xF3, 0x0F, 0x10, 0x05, 0x00, 0x00, 0x00, 0x00, 0xF3, 0x0F, 0x11, 0x44, 0x24, 0x00, 0x81, 0x74, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0xD9, 0x44, 0x24, 0x14, 0xEB, 0x07 }, "xxxx????xxxxx?xxx?????xxxxxx", mod.dwBase, mod.dwSize) + 0x4;
-    pOffsets.cl_forwardspeed = findPattern(new byte[] { 0xF3, 0x0F, 0x10, 0x05, 0x00, 0x00, 0x00, 0x00, 0xF3, 0x0F, 0x11, 0x44, 0x24, 0x00, 0x81, 0x74, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEB, 0x37 }, "xxxx????xxxxx?xxx?????xx", mod.dwBase, mod.dwSize) + 0x4;
-    pOffsets.dwUse = findPattern(new byte[] { 0x8B, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x8B, 0xF2, 0x8B, 0xC1, 0x83, 0xCE, 0x20 }, "xx????xxxxxxx", mod.dwBase, mod.dwSize) + 2;
-    pOffsets.clientCmd_Unrestricted = findPattern(new byte[] { 0x55,0x8B,0xEC,0x8B,0x0D,0x00,0x00,0x00,0x00,0x81,0xF9,0x00,0x00,0x00,0x00,0x75,0x0C,0xA1,0x00,0x00,0x00,0x00,0x35,0x00,0x00,0x00,0x00,0xEB,0x05,0x8B,0x01,0xFF,0x50,0x34,0x50},
-    "xxxxx????xx????xxx????x????xxxxxxxx", enginemod.dwBase, enginemod.dwSize);
-    pOffsets.loadNamedSkys = findPattern(new byte[] { 0x55,0x8B,0xEC,0x81,0xEC,0x00,0x00,0x00,0x00,0x56, 0x57, 0x8B, 0xF9, 0xC7, 0x45}, "xxxxx????xxxxxx", enginemod.dwBase, enginemod.dwSize);
-    pOffsets.forward = findPattern(new byte[] { 0x55,0x8B,0xEC,0x51,0x53,0x8A,0x5D,0x08}, "xxxxxxxx", mod.dwBase, mod.dwSize);
+    std::cout << "Dumping offsets.." << std::endl;
+    pOffsets.m_flNextCmdTime = generateMask("F2 0F 10 87 ? ? ? ? 66 0F 2F 05", enginemod.dwBase, enginemod.dwSize, "m_flNextCmdTime") + 4 + pOffsets.offsetClientState;
+    //pOffsets.g_bVoiceRecording = findPattern(new byte[] { 0x80, 0x3D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x75, 0x0C, 0x6A }, "xx????xxxx", enginemod.dwBase, enginemod.dwSize, "g_bVoiceRecording") + 2;
+    //pOffsets.cl_sidespeed = findPattern(new byte[] { 0xF3, 0x0F, 0x10, 0x05, 0x00, 0x00, 0x00, 0x00, 0xF3, 0x0F, 0x11, 0x44, 0x24, 0x00, 0x81, 0x74, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0xD9, 0x44, 0x24, 0x14, 0xEB, 0x07 }, "xxxx????xxxxx?xxx?????xxxxxx", mod.dwBase, mod.dwSize, "cl_sidespeed") + 0x4;
+    //pOffsets.cl_forwardspeed = findPattern(new byte[] { 0xF3, 0x0F, 0x10, 0x05, 0x00, 0x00, 0x00, 0x00, 0xF3, 0x0F, 0x11, 0x44, 0x24, 0x00, 0x81, 0x74, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEB, 0x37 }, "xxxx????xxxxx?xxx?????xx", mod.dwBase, mod.dwSize, "cl_forwardspeed") + 0x4;
+    //pOffsets.dwUse = findPattern(new byte[] { 0x8B, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x8B, 0xF2, 0x8B, 0xC1, 0x83, 0xCE, 0x20 }, "xx????xxxxxxx", mod.dwBase, mod.dwSize, "dwUse") + 2;
+    pOffsets.clientCmd_Unrestricted = generateMask("55 8B EC 8B 0D ? ? ? ? 81 F9 ? ? ? ? 75 0C A1 ? ? ? ? 35 ? ? ? ? EB 05 8B 01 FF 50 34 50", enginemod.dwBase, enginemod.dwSize, "clientCmd_Unrestricted");
+    //pOffsets.loadNamedSkys = findPattern(new byte[] { 0x55,0x8B,0xEC,0x81,0xEC,0x00,0x00,0x00,0x00,0x56, 0x57, 0x8B, 0xF9, 0xC7, 0x45}, "xxxxx????xxxxxx", enginemod.dwBase, enginemod.dwSize, "loadNamedSkys");
+    pOffsets.forward = generateMask("55 8B EC 51 53 8A 5D 08", mod.dwBase, mod.dwSize, "forward");
     pOffsets.back = Memory.readMem<uintptr_t>(gameModule + pOffsets.forward + 0x11F);
     pOffsets.left = Memory.readMem<uintptr_t>(gameModule + pOffsets.forward + 0x1D1);
     pOffsets.right = Memory.readMem<uintptr_t>(gameModule + pOffsets.forward + 0x200);
     pOffsets.forward = Memory.readMem<uintptr_t>(gameModule + pOffsets.forward + 0xF5);
-    pOffsets.Callback__IsReady = Memory.readMem<uintptr_t>(gameModule + generateMask("56 8B 35 ? ? ? ? 57 83 BE", mod.dwBase, mod.dwSize)) - 4;
+    pOffsets.Callback__IsReady = Memory.readMem<uintptr_t>(gameModule + generateMask("56 8B 35 ? ? ? ? 57 83 BE", mod.dwBase, mod.dwSize, "Callback__IsReady")) - 4;
     pOffsets.ConfirmedReservationCallback = Memory.readMem<uintptr_t>(pOffsets.Callback__IsReady + 7);
 
     /* general dump of offsets */
 
-    pOffsets.g_pClientClassHead = Memory.readMem<uintptr_t>(gameModule + generateMask("A1 ? ? ? ? C3 CC CC CC CC CC CC CC CC CC CC A1 ? ? ? ? B9", mod.dwBase, mod.dwSize) + 1);
-    pOffsets.dwForceJump = Memory.readMem<uint32_t>(gameModule + generateMask("8B 0D ? ? ? ? 8B D6 8B C1 83 CA 02", mod.dwBase, mod.dwSize) + 2) + 0;
-    pOffsets.dwGlowObjectManager = Memory.readMem<uint32_t>(gameModule + generateMask("A1 ? ? ? ? A8 01 75 4B", mod.dwBase, mod.dwSize) + 1) + 4;
-    pOffsets.dwEntityList = Memory.readMem<uint32_t>(gameModule + generateMask("BB ? ? ? ? 83 FF 01 0F 8C ? ? ? ? 3B F8", mod.dwBase, mod.dwSize) + 1) + 0;
-    pOffsets.dwLocalPlayer = Memory.readMem<uint32_t>(gameModule + generateMask("8D 34 85 ? ? ? ? 89 15 ? ? ? ? 8B 41 08 8B 48 04 83 F9 FF", mod.dwBase, mod.dwSize) + 3) + 4;
-    pOffsets.dwClientState = Memory.readMem<uint32_t>(engineModule + generateMask("A1 ? ? ? ? 33 D2 6A 00 6A 00 33 C9 89 B0", enginemod.dwBase, enginemod.dwSize) + 1) - engineModule;
-    pOffsets.model_ambient_min = Memory.readMem<uint32_t>(engineModule + generateMask("F3 0F 10 0D ? ? ? ? F3 0F 11 4C 24 ? 8B 44 24 20 35 ? ? ? ? 89 44 24 0C", enginemod.dwBase, enginemod.dwSize) + 4);
-    pOffsets.dwViewMatrix = Memory.readMem<uint32_t>(gameModule + generateMask("0F 10 05 ? ? ? ? 8D 85 ? ? ? ? B9", mod.dwBase, mod.dwSize) + 3) + 176;
-    pOffsets.dwbSendPackets = Memory.readMem<uint32_t>(engineModule + generateMask("B3 01 8B 01 8B 40 10 FF D0 84 C0 74 0F", enginemod.dwBase, enginemod.dwSize)) + 1;
-    pOffsets.dwInput = Memory.readMem<uint32_t>(gameModule + generateMask("B9 ? ? ? ? F3 0F 11 04 24 FF 50 10", mod.dwBase, mod.dwSize) + 1);
-    pOffsets.clientstate_last_outgoing_command = Memory.readMem<uint32_t>(engineModule + generateMask("8B 8F ? ? ? ? 8B 87 ? ? ? ? 41", enginemod.dwBase, enginemod.dwSize) + 2);
-    pOffsets.dwClientState_PlayerInfo = Memory.readMem<uint32_t>(engineModule + generateMask("8B 89 ? ? ? ? 85 C9 0F 84 ? ? ? ? 8B 01", enginemod.dwBase, enginemod.dwSize) + 2);
-    pOffsets.dwClientState_ViewAngles = Memory.readMem<uint32_t>(engineModule + generateMask("F3 0F 11 80 ? ? ? ? F3 0F 10 44 24 38", enginemod.dwBase, enginemod.dwSize) + 4);
+    pOffsets.g_pClientClassHead = Memory.readMem<uintptr_t>(gameModule + generateMask("A1 ? ? ? ? C3 CC CC CC CC CC CC CC CC CC CC A1 ? ? ? ? B9", mod.dwBase, mod.dwSize, "g_pClientClassHead") + 1);
+    pOffsets.dwForceJump = Memory.readMem<uint32_t>(gameModule + generateMask("8B 0D ? ? ? ? 8B D6 8B C1 83 CA 02", mod.dwBase, mod.dwSize, "dwForceJump") + 2) + 0;
+    pOffsets.dwGlowObjectManager = Memory.readMem<uint32_t>(gameModule + generateMask("A1 ? ? ? ? A8 01 75 4B", mod.dwBase, mod.dwSize, "dwGlowObjectManager") + 1) + 4;
+    pOffsets.dwEntityList = Memory.readMem<uint32_t>(gameModule + generateMask("BB ? ? ? ? 83 FF 01 0F 8C ? ? ? ? 3B F8", mod.dwBase, mod.dwSize, "dwEntityList") + 1) + 0;
+    pOffsets.dwLocalPlayer = Memory.readMem<uint32_t>(gameModule + generateMask("8D 34 85 ? ? ? ? 89 15 ? ? ? ? 8B 41 08 8B 48 04 83 F9 FF", mod.dwBase, mod.dwSize, "dwLocalPlayer") + 3) + 4;
+    pOffsets.dwClientState = Memory.readMem<uint32_t>(engineModule + generateMask("A1 ? ? ? ? 33 D2 6A 00 6A 00 33 C9 89 B0", enginemod.dwBase, enginemod.dwSize, "dwClientState") + 1) - engineModule;
+    pOffsets.model_ambient_min = Memory.readMem<uint32_t>(engineModule + generateMask("F3 0F 10 0D ? ? ? ? F3 0F 11 4C 24 ? 8B 44 24 20 35 ? ? ? ? 89 44 24 0C", enginemod.dwBase, enginemod.dwSize, "model_ambient_min") + 4);
+    pOffsets.dwViewMatrix = Memory.readMem<uint32_t>(gameModule + generateMask("0F 10 05 ? ? ? ? 8D 85 ? ? ? ? B9", mod.dwBase, mod.dwSize, "dwViewMatrix") + 3) + 176;
+    pOffsets.dwbSendPackets = Memory.readMem<uintptr_t>(engineModule + generateMask("B3 01 8B 01 8B 40 10 FF D0 84 C0 74 0F 80 BF ? ? ? ? ? 0F 84", enginemod.dwBase, enginemod.dwSize, "dwbSendPackets")) + 1;
+    pOffsets.dwInput = Memory.readMem<uint32_t>(gameModule + generateMask("B9 ? ? ? ? F3 0F 11 04 24 FF 50 10", mod.dwBase, mod.dwSize, "dwInput") + 1);
+    pOffsets.clientstate_last_outgoing_command = Memory.readMem<uint32_t>(engineModule + generateMask("8B 8F ? ? ? ? 8B 87 ? ? ? ? 41", enginemod.dwBase, enginemod.dwSize, "clientstate_last_outgoing_command") + 2);
+    pOffsets.dwClientState_PlayerInfo = Memory.readMem<uint32_t>(engineModule + generateMask("8B 89 ? ? ? ? 85 C9 0F 84 ? ? ? ? 8B 01", enginemod.dwBase, enginemod.dwSize, "dwClientState_PlayerInfo") + 2);
+    pOffsets.dwClientState_ViewAngles = Memory.readMem<uint32_t>(engineModule + generateMask("F3 0F 11 86 ? ? ? ? F3 0F 10 44 24 ? F3 0F 11 86", enginemod.dwBase, enginemod.dwSize, "dwClientState_ViewAngles") + 4);
 
     // xored offsets
 
     pOffsets.xor_cl_sidespeed = calcXorWithValue(pOffsets.cl_sidespeed);
     pOffsets.xor_cl_forwardspeed = calcXorWithValue(pOffsets.cl_forwardspeed);
 
+    std::cout << pOffsets.g_pClientClassHead << " " << pyfetcher::dwGetAllClasses << std::endl;
+
+    int size = (int)(sizeof(pOffsets) / sizeof(uintptr_t));
+    std::cout << "Offsets dump done! found " + std::to_string(size) + " offsets" << std::endl;
     return pOffsets;
 }
 
@@ -288,8 +293,11 @@ int NetVars::getProp(RecvTable* pTable, const char* name){
 
 int NetVars::getOffset(const char* table_name, const char* var_name){
     RecvTable* recvt = getTable(table_name);
+    std::string f = "Failed to find table ";
+    std::string comb = f + var_name;
     if(!recvt){
-        std::cout << "Failed to find table" << std::endl;
+        std::cout << comb << std::endl;
+
         return 0;
     }
     int offset = getProp(recvt, var_name);
@@ -305,6 +313,7 @@ int NetVars::getOffset(const char* table_name, const char* var_name){
 netVarStr NetVars::dumpNetvars(){
     netVarStr pNetVars;
     printf("Dumping netvars..\n");
+    pNetVars.m_bSpottedByMask = getOffset("CBaseEntity", "m_bSpottedByMask");
     pNetVars.m_iTeamNum = getOffset("CBasePlayer", "m_iTeamNum");
     pNetVars.m_clrRender = getOffset("CBaseEntity", "m_clrRender");
     pNetVars.m_bGunGameImmunity = getOffset("CCSPlayer", "m_bGunGameImmunity");
@@ -320,6 +329,5 @@ netVarStr NetVars::dumpNetvars(){
     pNetVars.m_iDefaultFOV = getOffset("CCSPlayer", "m_iDefaultFOV");
     pNetVars.m_hObserverTarget = getOffset("CBasePlayer", "m_hObserverTarget");
     pNetVars.m_bSpotted = getOffset("CBaseEntity", "m_bSpotted");
-
     return pNetVars;
 }

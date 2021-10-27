@@ -1,6 +1,5 @@
 #ifndef LOCALPLAYER_H
 #define LOCALPLAYER_H
-#include "offsets.hpp"
 #include "csmath.h"
 #include "Functions.h"
 #include "Structs.h"

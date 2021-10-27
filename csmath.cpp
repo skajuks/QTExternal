@@ -1,9 +1,7 @@
 #include "csmath.h"
-#include "offsets.hpp"
 #include "Functions.h"
 #include <Windows.h>
 #include "float.h"
-#include <csmath.h>
 #define _USE_MATH_DEFINES
 #include <iostream>
 #include <limits>

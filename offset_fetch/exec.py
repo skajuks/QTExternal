@@ -52,8 +52,7 @@ def fetchOffsets(debug_mode):
                 if(debug_mode):
                     print((f"constexpr ::std::ptrdiff_t {key} = {value};"))
             except AttributeError:
-                print("[ERROR] : finding offset {}".format(str(line)))
-                return
+                pass
         file.write("}")        
     if(debug_mode):     
         print((f"{len(offsets.keys())} offsets found!")) 

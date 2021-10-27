@@ -1,6 +1,8 @@
 #ifndef CSMATH_H
 #define CSMATH_H
 #include <windows.h>
+#include <stdio.h>
+#include <math.h>
 
 #pragma once
 

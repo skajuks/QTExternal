@@ -1,5 +1,4 @@
 #include "Functions.h"
-#include "offsets.hpp"
 #include "windows.h"
 #include "csmath.h"
 #include <TlHelp32.h>
@@ -109,8 +108,15 @@ void Functions::forwardSpeed(int value) {
     Memory.writeMem<uint32_t>(Memory.readMem<uint32_t>(gameModule + pOffsets.cl_forwardspeed), (*(uint32_t*)&value) ^ pOffsets.xor_cl_forwardspeed);
 }
 
-void Functions::setFlashDuration(uintptr_t localPlayer, int duration) {
-    Memory.writeMem<int>(localPlayer + pNetVars.m_flFlashDuration, duration);
+void Functions::setFlashDuration(uintptr_t localPlayer, float duration) {
+    Memory.writeMem<float>(localPlayer + pNetVars.m_flFlashDuration, duration);
+}
+
+bool Functions::checkPlayerSpottedByMask(uintptr_t entity, uintptr_t localPlayer){
+    uintptr_t spotted_by_mask = Memory.readMem<uintptr_t>(entity + pNetVars.m_bSpottedByMask);
+    //if(spotted_by_mask & (1 << local_player_id)) return true
+    // return false
+    return true;
 }
 
 uintptr_t Functions::getEntity(int index) {

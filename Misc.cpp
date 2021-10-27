@@ -1,6 +1,5 @@
 #include "Misc.h"
 #include "Functions.h"
-#include "offsets.hpp"
 #include "widget.h"
 #include "csmath.h"
 #include <iostream>
@@ -25,7 +24,7 @@ bool autoaccept_enabled = false;
 bool radio_commands_enable = false;
 
 bool toggleNoFlash = false;
-int flashAmmount = 0;
+float flashAmmount = 0.f;
 
 DWORD m_hTonemapController = 0x31CC; //DT_CSPlayer
 DWORD fm_bUseCustomAutoExposureMax = 0x9D4;
@@ -131,13 +130,13 @@ void Misc::fakeLagThreaded(const Entity& localPlayer, bool toggle){
                     && !Memory.readMem<bool>(pOffsets.g_bVoiceRecording)){
 #ifdef NDEBUG
                 //Memory.writeMem<double>(pOffsets.m_flNextCmdTime, FLT_MAX);
-                Memory.writeMem<BYTE>(engineModule + hazedumper::signatures::dwbSendPackets, false);
+                //Memory.writeMem<BYTE>(engineModule + hazedumper::signatures::dwbSendPackets, false);
 #endif
                 std::this_thread::sleep_for(std::chrono::milliseconds(120));    // should be ~8 ticks
 
 #ifdef NDEBUG
                 //Memory.writeMem<double>(pOffsets.m_flNextCmdTime, 0.0);
-                Memory.writeMem<BYTE>(engineModule + hazedumper::signatures::dwbSendPackets, true);
+                //Memory.writeMem<BYTE>(engineModule + hazedumper::signatures::dwbSendPackets, true);
 #endif
 
             }
@@ -231,6 +230,11 @@ void Misc::setNoFlash(const ClientInfo& localPlayer){
 
 void Misc::setEnabledNoFlash(bool state){
     toggleNoFlash = state;
+}
+
+void Misc::setNoFlashAmount(float amount){
+    flashAmmount = amount;
+    std::cout << flashAmmount << std::endl;
 }
 
 void Misc::setNightmodeAmount(const ClientInfo& localPlayer, float amount){

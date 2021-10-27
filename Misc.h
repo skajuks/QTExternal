@@ -39,6 +39,7 @@ public:
     static void setBhopEnabled(bool state);
     static void setEnabledNoFlash(bool state);
     static void setNoFlash(const ClientInfo& localPlayer);
+    static void setNoFlashAmount(float amount);
     static void setNightmodeAmount(const ClientInfo& localPlayer, float amount);
     static void changeFov(const ClientInfo& localPlayer, int fov);
     static void doBlockBot(float side, float forward);
