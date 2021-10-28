@@ -168,15 +168,12 @@ void Glow::ProcessEntityEnemy(const ClientInfo& ci, const Entity& e, uintptr_t g
     }
 }
 
-void Glow::ProcessTargetEntity(const ClientInfo& ci, uintptr_t glowObject) {
+void Glow::ProcessTargetEntity(const ClientInfo& ci, uintptr_t glowObject, Color3 &color) {
     if(glow_enabled){
         int glowIndex = Memory.readMem<int>(ci.entity + pNetVars.m_iGlowIndex);
         GlowObject targetGlow;
         Memory.readMemTo<GlowObject>(glowObject + (glowIndex * 0x38), &targetGlow);
-        targetGlow.red = 255;
-        targetGlow.green = 255;
-        targetGlow.blue = 0;
-        targetGlow.alpha = 255;
+        Functions::assignColorFromStruct(color, targetGlow);
         targetGlow.renderWhenOccluded = true;
         targetGlow.renderWhenUnoccluded = false;
         Memory.writeMemFrom<GlowObject>(glowObject + (glowIndex * 0x38), &targetGlow);
@@ -185,13 +182,8 @@ void Glow::ProcessTargetEntity(const ClientInfo& ci, uintptr_t glowObject) {
 
 void Glow::ProcessD3D9Render(const ClientInfo& ci, const Entity& e, int index){
     if(master_esp_toggle){
-
         player_info player;
-        uintptr_t clientState = Functions::getClientState();
-        uintptr_t uinfoTable = Memory.readMem<uintptr_t>(clientState + pOffsets.dwClientState_PlayerInfo);
-        uintptr_t items = Memory.readMem<std::uintptr_t>(Memory.readMem<uintptr_t>(uinfoTable + 0x40) + 0xC);
-        Memory.readMemTo<player_info>(Memory.readMem<uintptr_t>((items + 0x28) + (index * 0x34)), &player);   // read player struct
-
+        Functions::getPlayerInfo(index, player);
         view_matrix_t vm;
         Memory.readMemTo<view_matrix_t>(pOffsets.dwViewMatrix, &vm);    // read player viewmatrix
 

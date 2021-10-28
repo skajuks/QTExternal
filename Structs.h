@@ -9,6 +9,27 @@ struct toggleStateData {
     bool state;
 };
 
+class player_info {
+    private:
+        char __pad1[0x8];
+    public:
+        __int64 steamID64;
+    //private:
+        //char __pad[0x4];
+    public:
+        char name[32];
+    private:
+        char __pad2[0x64];
+    public:
+        char steam_id[32];
+};
+
+struct Color3 {
+    float r;
+    float g;
+    float b;
+};
+
 enum SendPropType
 {
     DPT_Int = 0,

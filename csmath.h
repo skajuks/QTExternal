@@ -17,13 +17,6 @@ struct view_matrix_t {
     float matrix[16];
 };
 
-class player_info {
-private:
-    char __pad[0x10];
-public:
-    char name[32];
-};
-
 class VECTOR3{
 public:
     VECTOR3(void)

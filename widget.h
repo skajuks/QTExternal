@@ -106,6 +106,10 @@ private slots:
 
     void on_ffa_mode_enable_stateChanged(int arg1);
 
+    void on_player_list_widget_itemDoubleClicked(QListWidgetItem *item);
+
+    void on_player_list_whitelist_itemDoubleClicked(QListWidgetItem *item);
+
 private:
 
 };

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <windows.h>
-
+#include <tuple>
 #include "Structs.h"
 
 class Glow {
@@ -21,6 +21,6 @@ public:
     static void ProcessEntityEnemy(const ClientInfo& ci, const Entity& e, uintptr_t glowObject, int targetindex);
     static void ProcessEntityTeam(const ClientInfo& ci, uintptr_t glowObject, int targetindex);
     static void ProcessD3D9Render(const ClientInfo& ci, const Entity& e, int index);
-    static void ProcessTargetEntity(const ClientInfo& ci, uintptr_t glowObject);
+    static void ProcessTargetEntity(const ClientInfo& ci, uintptr_t glowObject, Color3 &color);
 };
 

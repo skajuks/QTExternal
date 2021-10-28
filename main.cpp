@@ -3,6 +3,7 @@
 #include <iostream>
 #include <limits>
 #include <cstddef>
+#include <tuple>
 #include "Functions.h"
 #include "aimbot.h"
 #include <QApplication>
@@ -18,6 +19,7 @@
 #include <QStyleFactory>
 #include "stylesheet.h"
 #include <QTimer>
+#include <QList>
 
 #include "widget.h"
 #include "ui_widget.h"
@@ -78,7 +80,16 @@ bool  radar_enabled     = false;
 bool  fakelag_enabled   = false;
 bool  target_teammates  = false;
 const char* skybox_name;
+//const std::string whitelist[] = {"STEAM_1:1:89702025"};
+std::vector<std::string> whitelist;
+std::vector<std::string> player_list;
+
 //const char* spectators[] = {};
+
+Color3 red = {255,0,0};
+Color3 green = {0,255,0};
+Color3 blue = {0,0,255};
+Color3 purple = {255,0,255};
 
 extern int aimfov;
 
@@ -99,6 +110,11 @@ int main(int argc, char** argv) {
     for(auto item: skybox_array){
         window->ui->skybox_list->addItem(QString(item));
     }
+    window->ui->player_list_widget->addItem(QString("yghhjak sdasd"));
+    window->ui->player_list_widget->addItem(QString("ygh5555h jaksdasd"));
+    window->ui->player_list_widget->addItem(QString("yghhja423 4ksdasd"));
+    window->ui->player_list_widget->addItem(QString("ygh555555 555hjaksdasd"));
+    window->ui->player_list_widget->addItem(QString("yghhjak666 6sdasd"));
 
     window->ui->aimbot_calc->addItems({"Angle fov", "Distance", "Crosshair fov"});
     window->ui->aimbot_calc->setCurrentRow(0);
@@ -165,18 +181,23 @@ int main(int argc, char** argv) {
                         Memory.writeMem<bool>(ci[0].entity + pNetVars.m_bSpotted, true);    // make this look nicer :)
 
                     if(toggleAimbot && !target_teammates){
-                        /*VECTOR2 newDistance = Aim::getClosestEntity(e[0], ci[entityIndex], ci[0]);
-                        if(newDistance.x < oldx && newDistance.y < oldy && newDistance.x <= aimfov && newDistance.y <= aimfov){
-                            oldx = newDistance.x;
-                            oldy = newDistance.y;
-                            targetIndex = entityIndex;
-                        }*/
                         getClosestEntityIndex(entityIndex, oldx, oldy, targetIndex);
                     }
                     Glow::ProcessEntityEnemy(ci[entityIndex], e[entityIndex], glowObjectManager, targetIndex == entityIndex ? 1 : 0);
                 }
                 if(toggleAimbot && target_teammates){
                     getClosestEntityIndex(entityIndex, oldx, oldy, targetIndex);
+                }
+                player_info player;
+                Functions::getPlayerInfo(entityIndex, player);
+                if(std::find(player_list.begin(), player_list.end(), player.steam_id) == player_list.end()){
+                    player_list.push_back(player.steam_id);
+                    std::string conc = (std::string)player.name + " " + (std::string)player.steam_id;
+                    window->ui->player_list_widget->addItem(QString::fromUtf8(conc.c_str()));
+                }
+                for(auto p: whitelist){
+                    if (p == std::string(player.steam_id))
+                        Glow::ProcessTargetEntity(ci[entityIndex], glowObjectManager, purple);
                 }
             }
         } while(ci[entityIndex++].nextEntity);
@@ -254,46 +275,6 @@ int main(int argc, char** argv) {
             }
         }
 
-        // debug section
-
-        // Update stateData struct to display and update toggle states
-
-        stateData[0] = {"Aimbot:", toggleAimbot};
-        stateData[1] = {"Silent aim:", enable_silent};
-        stateData[2] = {"Glow ESP:", Glow::glowEnabled()};
-        stateData[3] = {"Box ESP:", esp_master_state};
-        stateData[4] = {"BunnyHop:", Misc::bhopEnabled()};
-        stateData[5] = {"Head blockbot:", blockbot_enabled};
-
-        if(toggleAimbot){
-            if(toggle_aimbot_key)
-                 window->ui->aimbot_state_ui->setText(QString("AIMBOT ACTIVE [ ARMED ON KEY ]"));
-            window->ui->aimbot_state_ui->setText(QString("AIMBOT ACTIVE"));
-            window->ui->aimbot_state_ui->setStyleSheet(QString("QLabel{color: rgba(0,255,0,255)}"));
-
-        } else {
-            //Paint::StringOutlined("Aimbot disabled")
-        }
-
-        window->ui->aimbot_state_ui->setText(QString("AIMBOT ON STANDBY"));
-        window->ui->aimbot_state_ui->setStyleSheet(QString("QLabel{color: rgba(255,255,0,255)}"));
-        //window->ui->loc_player_vel->setText(QString::number(e[0].vecVelocity.z));
-        //window->ui->pofst->setText(QString::number(bestBlockDist));
-        //e[0].vecVelocity.z > 0 ? window->ui->loc_player_vel->setStyleSheet(QString("QLabel{color: rgba(0,255,0,255)}")) : window->ui->loc_player_vel->setStyleSheet(QString("QLabel{color: rgba(255,255,0,255)}"));
-        //window->ui->curr_ent_cnt_val->setText(QString::number(aliveEntity));
-        //window->ui->loc_p_ent_num->setText(QString::number(ci[0].entity));
-        //window->ui->curr_tgt->setText(QString::number(targetIndex));
-        //window->ui->dist_x->setText(QString::number(oldx));
-        //window->ui->dist_y->setText(QString::number(oldy));
-        //->ui->enable_autoaccept->setText(QString(Misc::returnAutoAcceptState() ? "Accepting match" : "Enable autoaccept"));
-        //window->ui->enable_autoaccept->setStyleSheet(QString(Misc::returnAutoAcceptState() ? "QPushButton{background-color: lime}" : "QPushButton{background-color: blue}"));
-        //window->ui->ent_recoil->setText(QString(QString::number(variables.recoil.x) + " : " + QString::number(variables.recoil.y) + " : " +
-                                                //QString::number(variables.recoil.z)));
-
-        //window->ui->ent_weapon->setText(QString::number(variables.entityWeapon));
-        //window->ui->ent_angles->setText(QString(QString::number(variables.AimAngle.x) + " : " + QString::number(variables.AimAngle.y) + " : " +
-                                                //QString::number(variables.AimAngle.z)));
-
     });
     timer->start(1);
 
@@ -319,6 +300,30 @@ Widget::Widget(QWidget *parent)
 Widget::~Widget()
 {
     delete ui;
+}
+
+void Widget::on_player_list_widget_itemDoubleClicked(QListWidgetItem *item){
+    std::string selected = item->text().toStdString().c_str();
+    size_t pos = selected.find(" ");
+    std::string newstr = selected.substr(pos);
+    if(std::find(whitelist.begin(),whitelist.end(), newstr) == whitelist.end()){
+        whitelist.push_back(newstr);
+        ui->player_list_whitelist->addItem(QString::fromStdString(newstr));
+    }
+}
+
+void Widget::on_player_list_whitelist_itemDoubleClicked(QListWidgetItem *item){
+    std::string selected = item->text().toStdString().c_str();
+    size_t pos = selected.find(" ");
+    std::string newstr = selected.substr(pos);
+    for(uint i = 0; i < whitelist.size(); i++){
+        if(newstr == whitelist[i]){
+            whitelist.erase(whitelist.begin() + i);
+            std::cout << whitelist[i] << std::endl;
+            ui->player_list_whitelist->removeItemWidget(item);
+            delete item;
+        }
+    }
 }
 
 void Widget::on_ffa_mode_enable_stateChanged(int arg1){
