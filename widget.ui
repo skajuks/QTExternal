@@ -349,7 +349,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="Aimbot">
     <attribute name="title">
@@ -1097,6 +1097,24 @@
       </widget>
      </widget>
     </widget>
+    <widget class="QPushButton" name="radar_toggle">
+     <property name="geometry">
+      <rect>
+       <x>230</x>
+       <y>110</y>
+       <width>101</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Open ext radar</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="Misc">
     <attribute name="title">
@@ -1442,15 +1460,28 @@
       <string>PushButton</string>
      </property>
     </widget>
+    <widget class="QLabel" name="mapname">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>10</y>
+       <width>91</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QGroupBox" name="groupBox_2">
    <property name="geometry">
     <rect>
      <x>370</x>
-     <y>289</y>
+     <y>313</y>
      <width>321</width>
-     <height>171</height>
+     <height>145</height>
     </rect>
    </property>
    <property name="title">
@@ -1460,9 +1491,9 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>18</y>
+      <y>20</y>
       <width>321</width>
-      <height>121</height>
+      <height>91</height>
      </rect>
     </property>
    </widget>
@@ -1470,7 +1501,7 @@
     <property name="geometry">
      <rect>
       <x>5</x>
-      <y>142</y>
+      <y>114</y>
       <width>141</width>
       <height>25</height>
      </rect>
@@ -1488,7 +1519,7 @@ border-radius: 5px;
     <property name="geometry">
      <rect>
       <x>173</x>
-      <y>142</y>
+      <y>114</y>
       <width>141</width>
       <height>25</height>
      </rect>
@@ -1521,6 +1552,42 @@ border-radius: 5px;
      <width>321</width>
      <height>101</height>
     </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="add_to_cfg">
+   <property name="geometry">
+    <rect>
+     <x>480</x>
+     <y>290</y>
+     <width>101</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>8</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Add to cfg</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="add_to_cfg_2">
+   <property name="geometry">
+    <rect>
+     <x>580</x>
+     <y>290</y>
+     <width>111</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>8</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Remove from cfg</string>
    </property>
   </widget>
  </widget>

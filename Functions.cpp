@@ -127,15 +127,14 @@ bool Functions::checkIfScoped(uintptr_t entity) {
     return Memory.readMem<bool>(entity + pNetVars.m_bIsScoped);
 }
 
-void Functions::assignColorFromStruct(Color3 &color, GlowObject &glow){
+void Functions::assignColorFromStruct(ColorRGB &color, GlowObject &glow){
     glow.red = color.r;
     glow.green = color.g;
     glow.blue = color.b;
     glow.alpha = 255;
 }
 
-void Functions::getPlayerInfo(int &index, player_info &player){
-    uintptr_t clientState = Functions::getClientState();
+void Functions::getPlayerInfo(int &index, player_info &player, uintptr_t& clientState){
     uintptr_t uinfoTable = Memory.readMem<uintptr_t>(clientState + pOffsets.dwClientState_PlayerInfo);
     uintptr_t items = Memory.readMem<std::uintptr_t>(Memory.readMem<uintptr_t>(uinfoTable + 0x40) + 0xC);
     Memory.readMemTo<player_info>(Memory.readMem<uintptr_t>((items + 0x28) + (index * 0x34)), &player);   // read player struct

@@ -24,7 +24,13 @@ static const char* skybox_array[] = {"cs_baggage_skybox_",
 static const char* radio_commands[11] = {"getout", "enemydown", "enemyspot", "needbackup",
                                       "takingfire", "regroup", "sticktog", "go", "coverme",
                                       "cheer", "roger"};
-
+static const std::vector<map> map_list = {
+    {"cs_office", "maps/cs_office.png", -1838, 1858, 4.1f},
+    {"de_mirage", "maps/de_mirage.png",0,0,0},
+    {"de_dust2", "maps/de_dust2.png", -2476, 3239, 4.4f},
+    {"de_inferno", "de_inferno.png",0,0,0},
+    {"de_vertigo", "de_vertigo.png",0,0,0},
+};
 
 class Misc
 {

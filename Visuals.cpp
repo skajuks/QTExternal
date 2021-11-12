@@ -102,7 +102,7 @@ void Glow::setGlowTeamColor(int r, int g, int b, bool lPlayerTeam){
     }
 }
 
-static GlowObject setGlowColor(GlowObject glow, int health, uintptr_t entity, int targetindex) {
+static GlowObject setGlowColor(GlowObject glow, int health, uintptr_t entity, bool targetindex) {
     if (Functions::isDefusing(entity)) {
         glow.red = 255;
         glow.blue = 255;
@@ -117,7 +117,7 @@ static GlowObject setGlowColor(GlowObject glow, int health, uintptr_t entity, in
             glow.green = ETeamG;
             glow.blue = ETeamB;
         }
-        if(targetindex != 0){
+        if(targetindex){
             glow.red = 255;
             glow.green = 255;
             glow.blue = 0;
@@ -135,7 +135,7 @@ void Glow::setBrightness() {
     Memory.writeMem<int>(pOffsets.model_ambient_min, xorptr);
 }
 
-void Glow::ProcessEntityTeam(const ClientInfo& ci, uintptr_t glowObject, int targetindex) {
+void Glow::ProcessEntityTeam(const ClientInfo& ci, uintptr_t& glowObject, bool targetindex) {
     if(glow_enabled){
         int glowIndex = Memory.readMem<int>(ci.entity + pNetVars.m_iGlowIndex);
         GlowObject tGlow;
@@ -144,7 +144,7 @@ void Glow::ProcessEntityTeam(const ClientInfo& ci, uintptr_t glowObject, int tar
         tGlow.red = TeamR;
         tGlow.green = TeamG;
         tGlow.blue = TeamB;
-        if(targetindex != 0){
+        if(targetindex){
             tGlow.red = 255;
             tGlow.green = 255;
             tGlow.blue = 0;
@@ -157,7 +157,7 @@ void Glow::ProcessEntityTeam(const ClientInfo& ci, uintptr_t glowObject, int tar
     }
 }
 
-void Glow::ProcessEntityEnemy(const ClientInfo& ci, const Entity& e, uintptr_t glowObject, int targetindex) {
+void Glow::ProcessEntityEnemy(const ClientInfo& ci, const Entity& e, uintptr_t& glowObject, bool targetindex) {
     if(glow_enabled){
         int glowIndex = Memory.readMem<int>(ci.entity + pNetVars.m_iGlowIndex);
         GlowObject eGlow;
@@ -168,7 +168,7 @@ void Glow::ProcessEntityEnemy(const ClientInfo& ci, const Entity& e, uintptr_t g
     }
 }
 
-void Glow::ProcessTargetEntity(const ClientInfo& ci, uintptr_t glowObject, Color3 &color) {
+void Glow::ProcessTargetEntity(const ClientInfo& ci, uintptr_t& glowObject, ColorRGB &color) {
     if(glow_enabled){
         int glowIndex = Memory.readMem<int>(ci.entity + pNetVars.m_iGlowIndex);
         GlowObject targetGlow;
@@ -180,10 +180,10 @@ void Glow::ProcessTargetEntity(const ClientInfo& ci, uintptr_t glowObject, Color
     }
 }
 
-void Glow::ProcessD3D9Render(const ClientInfo& ci, const Entity& e, int index){
+void Glow::ProcessD3D9Render(const ClientInfo& ci, const Entity& e, int& index){
     if(master_esp_toggle){
         player_info player;
-        Functions::getPlayerInfo(index, player);
+        //Functions::getPlayerInfo(index, player);
         view_matrix_t vm;
         Memory.readMemTo<view_matrix_t>(pOffsets.dwViewMatrix, &vm);    // read player viewmatrix
 

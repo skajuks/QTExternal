@@ -57,7 +57,7 @@ uintptr_t MemMan::getModule(uintptr_t procId, const wchar_t* modName)
 
 uintptr_t MemMan::getAddress(uintptr_t addr, std::vector<uintptr_t> vect)
 {
-	for (int i = 0; i < vect.size(); i++)
+    for (size_t i = 0; i < vect.size(); i++)
 	{
 		ReadProcessMemory(handle, (BYTE*)addr, &addr, sizeof(addr), 0);
 		addr += vect[i];

@@ -130,14 +130,16 @@ void Misc::fakeLagThreaded(const Entity& localPlayer, bool toggle){
                     && !Memory.readMem<bool>(pOffsets.g_bVoiceRecording)){
 #ifdef NDEBUG
                 //Memory.writeMem<double>(pOffsets.m_flNextCmdTime, FLT_MAX);
-                //Memory.writeMem<BYTE>(engineModule + hazedumper::signatures::dwbSendPackets, false);
 #endif
+                //Memory.writeMem<BYTE>(engineModule + pyfetch::dwbSendPackets, false);
+
                 std::this_thread::sleep_for(std::chrono::milliseconds(120));    // should be ~8 ticks
 
 #ifdef NDEBUG
                 //Memory.writeMem<double>(pOffsets.m_flNextCmdTime, 0.0);
-                //Memory.writeMem<BYTE>(engineModule + hazedumper::signatures::dwbSendPackets, true);
 #endif
+                //Memory.writeMem<BYTE>(engineModule + hazedumper::signatures::dwbSendPackets, true);
+
 
             }
 

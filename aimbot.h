@@ -15,7 +15,7 @@ public:
     static void enableJumpShot();
     static float getClosestEntityByDistance(const Entity &Entity_local, VECTOR3 Entity_target);
     static float getClosestEntityByDistance(const Entity &Entity_local, const Entity &Entity_target);
-    static float getClosestEntityByDistance(VECTOR3 local, VECTOR3 target);
+    static float getClosestEntityByDistance(VECTOR3* local, VECTOR3* target);
     static void enableDormantMode();
 };
 

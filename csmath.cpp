@@ -21,10 +21,16 @@ float Math::returnVelocity(const Entity& local_entity){
     return (float)sqrt(vel.x * vel.x + vel.y * vel.y);
 }
 
-bool Math::equalVector(VECTOR3 source, VECTOR3 compare){
-    if(source.x == compare.x && source.y == compare.y && source.z == compare.z)
-        return true;
-    return false;
+bool Math::equalVector(VECTOR3* source, VECTOR3* compare){
+    return source == compare ? true : false;
+}
+
+VECTOR2 Math::calculateOpenGLXY(VECTOR3 &source)
+{
+    VECTOR2 out;
+    out.x = (source.x + 1838) / 4.1;
+    out.y = (source.y - 1858) / 4.1;
+    return out;
 }
 
 VECTOR3 Math::WorldToScreen(const VECTOR3 pos, view_matrix_t* matrix, int width, int height) {

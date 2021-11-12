@@ -104,8 +104,8 @@ float Aim::getClosestEntityByDistance(const Entity &Entity_local, const Entity &
     return sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);
 }
 
-float Aim::getClosestEntityByDistance(VECTOR3 local, VECTOR3 target){
-    VECTOR3 delta = local - target;
+float Aim::getClosestEntityByDistance(VECTOR3* local, VECTOR3* target){
+    VECTOR3 delta = *local - *target;
     return sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);
 }
 

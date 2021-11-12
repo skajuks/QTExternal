@@ -97,7 +97,8 @@ public:
     static VECTOR3 PlayerAngles();
     static void ClampAngles(float* anglex, float* angley);
     static VECTOR3 Smooth(float smooth, VECTOR3 currentAngle, VECTOR3 aimAngle);
-    static bool equalVector(VECTOR3 source, VECTOR3 compare);
+    static bool equalVector(VECTOR3* source, VECTOR3* compare);
+    static VECTOR2 calculateOpenGLXY(VECTOR3& source);
 };
 
 #endif // MATH_H

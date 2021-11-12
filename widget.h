@@ -110,6 +110,8 @@ private slots:
 
     void on_player_list_whitelist_itemDoubleClicked(QListWidgetItem *item);
 
+    void on_radar_toggle_clicked();
+
 private:
 
 };

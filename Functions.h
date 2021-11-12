@@ -39,7 +39,7 @@ public:
     static void sideSpeed(float value);
     static bool checkPlayerSpottedByMask(uintptr_t entity, uintptr_t localPlayer);
     static void clientCmd_Unrestricted(const char* command);
-    static void getPlayerInfo(int &index, player_info &player);
-    static void assignColorFromStruct(Color3 &color, GlowObject &glow);
+    static void getPlayerInfo(int &index, player_info &player, uintptr_t &clientState);
+    static void assignColorFromStruct(ColorRGB &color, GlowObject &glow);
 
 };extern Functions fun;

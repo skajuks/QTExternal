@@ -3,10 +3,35 @@
 #include <windows.h>
 #include "csmath.h"
 #include <stdint.h>
+#include <iostream>
+
+struct map{
+    std::string map_name;
+    std::string map_img_name;
+    int offsetx;
+    int offsety;
+    float scale;
+
+    map& operator=(const map& v)
+    {
+        map_name = v.map_name;
+        map_img_name = v.map_img_name;
+        offsetx = v.offsetx;
+        offsety = v.offsety;
+        scale = v.scale;
+        return *this;
+    }
+};
 
 struct toggleStateData {
     const char* text;
     bool state;
+};
+
+struct playerInfoStacked {
+public:
+    std::string name;
+    std::string id;
 };
 
 class player_info {
@@ -24,7 +49,7 @@ class player_info {
         char steam_id[32];
 };
 
-struct Color3 {
+struct ColorRGB {
     float r;
     float g;
     float b;

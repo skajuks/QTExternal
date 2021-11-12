@@ -32,10 +32,12 @@ HEADERS += \
     esp.h \
     localplayer.h \
     paint.h \
+    radarwidget.h \
     stylesheet.h \
     widget.h
 
 FORMS += \
+    radarwidget.ui \
     widget.ui
 
 # Default rules for deployment.
