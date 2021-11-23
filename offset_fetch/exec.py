@@ -5,7 +5,7 @@ import re
 import pathlib
 
 page = "https://github.com/frk1/hazedumper/blob/master/csgo.cs" # hazedumper gh repo
-timestamp_file = str(pathlib.Path(__file__).parent.resolve()) + "\prev_fetch_time.txt"
+timestamp_file = f"{str(pathlib.Path(__file__).parent.resolve())}\prev_fetch_time.txt"
 
 def fetchPreviousUpdateTime():
     with open(timestamp_file, "r+") as file:
@@ -45,12 +45,12 @@ def fetchOffsets(debug_mode):
         file.write("#pragma once \n#include <cstdint> \n#include <iostream> \nnamespace pyfetcher {\n") # write c++ includes and start namespace
         for line in response.splitlines():
             try:
-                value = re.search('0x.+?(?=<)', str(line)).group()                 #offset value
+                value = '0x' + re.search('<span class="pl-c1">((?!0x).+?(?=<))', str(line)).group(1)   #offset value
                 key = re.search('<span class="pl-en">(\w+)', str(line)).group(1)   #offset key
                 file.write("constexpr ::std::ptrdiff_t " + key + " = " + value + ";\n")
                 offsets.update({key : value})
                 if(debug_mode):
-                    print((f"constexpr ::std::ptrdiff_t {key} = {value};"))
+                    print(f"constexpr ::std::ptrdiff_t {key} = {value};")
             except AttributeError:
                 pass
         file.write("}")        
